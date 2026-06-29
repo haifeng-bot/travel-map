@@ -138,14 +138,14 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script>
-const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "澳门", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "香港", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "上海", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.034, "lon": 118.766}, "CTU": {"name": "成都", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "张家界", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "西安", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "北京", "lat": 40.08, "lon": 116.585}};
+const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "澳门", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "香港", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "上海", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "张家界", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "西安", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "北京", "lat": 40.08, "lon": 116.585}};
 
 // 交通节点：机场和高铁站的具体位置，用于精确绘制航班起降和高铁进出
 // type: "airport" | "station"
 const TRANSPORT_NODES = {
   "PVG":  {name: "浦东机场", lat: 31.143, lon: 121.805, type: "airport"},
   "SHA_HQ": {name: "上海虹桥站", lat: 31.194, lon: 121.319, type: "station"},
-  "WHU_XY": {name: "芜宣机场", lat: 30.852, lon: 118.752, type: "airport"},
+  "WHU_XY": {name: "芜宣机场", lat: 31.104, lon: 118.667, type: "airport"},
   "TFU":  {name: "天府机场", lat: 30.312, lon: 104.441, type: "airport"},
   "CTU_EAST": {name: "成都东站", lat: 30.630, lon: 104.144, type: "station"},
   "CKG_NORTH": {name: "重庆北站", lat: 29.610, lon: 106.563, type: "station"},

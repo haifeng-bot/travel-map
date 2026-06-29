@@ -144,12 +144,12 @@ const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
 const TRANSPORT_LABEL = {"flight": "飞机", "train": "高铁", "ferry": "轮渡"};
 const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
 // 侧边栏宽度（CSS 中 sidebar 是 left:12px + width:310px，总占 322px）。
-// 地图 zoom 中心点需要右移这个距离以避免被侧边栏遮挡。
-// 另外城市 marker 是 30x30 圆形 + 3px 边框（半宽 18px），
-// 左侧 padding 需额外加 18px + 6px 间隙让 marker 完全露出。
+// 城市 marker 半径（含边框）= 18px。
+// LEFT_PADDING = 侧边栏 + marker 半径 + 明显的右移量 = 600
+//   → bounds 中心在屏幕中线右侧约 260px（13.5% 屏宽），保证视觉上明显右移
 const SIDEBAR_WIDTH = 322;
-const MARKER_HALF = 18;          // 城市 marker 半径（含边框）
-const LEFT_PADDING = SIDEBAR_WIDTH + MARKER_HALF + 6;  // 346
+const MARKER_HALF = 18;
+const LEFT_PADDING = 600;  // 加大右移量，从 346 提升到 600
 const ORDER = ["SZX", "MFM", "HKG", "SHA", "WHU", "CTU", "CKG", "DYG", "XIY", "PEK"];
 // 景点推荐（可随时补充；停时间为 0 天的城市仍会列出以供下次参考）
 const ATTRACTIONS = {

@@ -118,16 +118,16 @@
 
 <div class="sidebar">
   <h1>China Trip Itinerary</h1>
-  <div class="subtitle">Sep 23 – Oct 17, 2026 · 12 legs · 25 days</div>
+  <div class="subtitle">Sep 23 – Oct 17, 2026 · 10 cities · 25 days</div>
   <div id="leg-list"></div>
 </div>
 
 <div class="legend">
-  <div class="legend-title">LEGEND</div>
-  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>Flight</div>
-  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#2f855a 0,#2f855a 7px,transparent 7px,transparent 11px)"></div>High-speed Rail</div>
-  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#d69e2e 0,#d69e2e 3px,transparent 3px,transparent 6px)"></div>Ferry</div>
-  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,rgba(43,108,176,0.45) 0,rgba(43,108,176,0.45) 9px,transparent 9px,transparent 14px); border-radius:0;"></div>Long-haul flight arc</div>
+  <div class="legend-title">Legend</div>
+  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>✈ Flight</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#2f855a 0,#2f855a 7px,transparent 7px,transparent 11px)"></div>🚄 High-speed Rail</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#d69e2e 0,#d69e2e 3px,transparent 3px,transparent 6px)"></div>⛴ Ferry</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,rgba(43,108,176,0.45) 0,rgba(43,108,176,0.45) 9px,transparent 9px,transparent 14px); border-radius:0;"></div>Long-haul arc</div>
 </div>
 
 <div class="scale-tip">
@@ -139,18 +139,26 @@
         crossorigin=""></script>
 <script>
 const CITIES = {"BCN": {"name": "Barcelona", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "Shenzhen", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "Macau", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "Hong Kong", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "Shanghai", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "Pudong (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "Hangzhou", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "Wuhu", "lat": 31.034, "lon": 118.766}, "CTU": {"name": "Chengdu", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "Tianfu (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "Chongqing", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "Zhangjiajie", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "Xi'an", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "Beijing", "lat": 40.08, "lon": 116.585}};
-const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "Outbound"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "\u2014", "dep": "~morning", "arr": "~morning", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "\u2014", "dep": "afternoon", "arr": "afternoon", "dur": "~1h", "note": "Same day"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "\u2192 Pudong PVG"}, {"date": "Sep 30", "from": "SHA", "to": "HGH", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1h", "note": ""}, {"date": "Oct 02", "from": "HGH", "to": "WHU", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~2h", "note": ""}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "\u2192 Tianfu TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "Return"}];
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "Outbound"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "morning", "arr": "morning", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "afternoon", "arr": "afternoon", "dur": "~1h", "note": "Same day"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→  Pudong PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~3h", "note": "Direct (skip Hangzhou)"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "→  Tianfu TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "Return"}];
 const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
 const TRANSPORT_LABEL = {"flight": "Flight", "train": "High-speed Rail", "ferry": "Ferry"};
 const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
-const ORDER = ["SZX", "MFM", "HKG", "SHA", "HGH", "WHU", "CTU", "CKG", "DYG", "XIY", "PEK"];
+// Sidebar: left:12px + width:310px = 322px
+// Marker radius (incl. border) = 18px
+// LEFT_PADDING = sidebar + marker + rightward offset
+//   →  bounds center ~265px right of center
+const SIDEBAR_WIDTH = 322;
+const MARKER_HALF = 18;
+const LEFT_PADDING = 450;  // rightward offset, ~265px right of center
+const ORDER = ["SZX", "MFM", "HKG", "SHA", "WHU", "CTU", "CKG", "DYG", "XIY", "PEK"];
+// Attractions (cities with 0 stay still listed for reference)
 const ATTRACTIONS = {
   SZX: ["Window of the World", "Happy Valley", "OCT East", "Splendid China"],
   MFM: ["Ruins of St. Paul's", "A-Ma Temple", "The Venetian", "Senado Square"],
-  HKG: ["Victoria Harbour", "Victoria Peak", "Hong Kong Disneyland", "Ocean Park", "Temple Street"],
+  HKG: ["Victoria Harbour", "Victoria Peak", "Hong Kong Disneyland", "Ocean Park", "Temple Street Night Market"],
   SHA: ["The Bund", "Oriental Pearl Tower", "Yu Garden", "Tianzifang", "Shanghai Museum"],
-  HGH: ["West Lake", "Lingyin Temple", "Leifeng Pagoda", "Longjing Village"],
-  WHU: ["Jiuzi Square", "Jinghu Park", "Chery Industrial Park"],
+  // HGH skipped this trip — kept for reference
+  WHU: ["Jiuzi Square", "Jinghu Park", "Chery Industrial Park", "Zhongjiang Pagoda", "Zheshan Park"],
   CTU: ["Panda Base", "Kuanzhai Alley", "Wuhou Shrine", "Jinli Street"],
   CKG: ["Hongya Cave", "Ciqikou", "Jiefangbei", "Wulong Tiansheng Bridge"],
   DYG: ["Zhangjiajie National Forest Park", "Tianmen Mountain", "Yellow Dragon Cave", "Glass Bridge"],
@@ -183,27 +191,34 @@ function drawLongArc(points, color, leg, opacity = 0.45) {
     dashArray: '9, 12', lineCap: 'round'
   }).addTo(map).bindPopup(
     `<div class="popup-content">
-      <div class="city">${leg.date} · Long-haul</div>
-      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+      <div class="city">${dateToEn(leg.date)} · Long-haul</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[leg.from].name} →  ${CITIES[leg.to].name}</div>
       <div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>
       <div class="time-row">
         <div><div class="lbl">DEP</div>${leg.dep}</div>
-        <div><div class="lbl">ARR</div>${leg.arr}</div>
+        <div><div class="lbl">arrives</div>${leg.arr}</div>
       </div>
-      <div class="meta">Duration ${leg.dur}${leg.note ? ' · ' + leg.note : ''}</div>
+      <div class="meta">Duration ${leg.dur}${leg.note ? ' · ' + (leg.note === 'Outbound' ? 'Outbound' : leg.note === 'Return' ? 'Return' : leg.note) : ''}</div>
     </div>`
   );
 }
 
 drawLongArc(ARC_BCN_SZX, COLORS.flight, LEGS[0], 0.5);
-drawLongArc(ARC_PEK_BCN, COLORS.flight, LEGS[11], 0.5);
+drawLongArc(ARC_PEK_BCN, COLORS.flight, LEGS[10], 0.5);
 
-// Render attraction list as compact chips
+// Format leg popup date
+function dateToCn(dateStr) {
+  const d = new Date(dateStr + ' 2026');
+  if (isNaN(d.getTime())) return dateStr;
+  const m = d.toLocaleString("en-US", {month:"short"}); return `${m} ${d.getDate()}`;
+}
+
+// Attractions → HTML chip list
 function attractionsHtml(code) {
   const list = ATTRACTIONS[code];
   if (!list || !list.length) return '';
   return `<div class="attractions">
-      <div class="attractions-title">Recommended sights</div>
+      <div class="attractions-title">Sights</div>
       <ul>${list.map(a => `<li>${a}</li>`).join('')}</ul>
     </div>`;
 }
@@ -212,7 +227,7 @@ function attractionsHtml(code) {
 for (let i = 0; i < ORDER.length - 1; i++) {
   const fromCode = ORDER[i];
   const toCode = ORDER[i + 1];
-  const leg = LEGS[i + 1];  // skip legs[0] (BCN→SZX long-haul)
+  const leg = LEGS[i + 1];  // skip legs[0] (BCN→ SZX long-haul)
   const color = COLORS[leg.transport];
   const dash = leg.transport === 'ferry' ? '5,8' : (leg.transport === 'train' ? '8,5' : null);
 
@@ -221,14 +236,14 @@ for (let i = 0; i < ORDER.length - 1; i++) {
     { color: color, weight: 4.5, opacity: 0.9, dashArray: dash }
   ).addTo(map).bindPopup(
     `<div class="popup-content">
-      <div class="city">${leg.date}</div>
-      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} → ${CITIES[toCode].name}</div>
+      <div class="city">${dateToEn(leg.date)}</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} →  ${CITIES[toCode].name}</div>
       ${leg.no !== '—' ? `<div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>` : `<div><span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>`}
       <div class="time-row">
         <div><div class="lbl">DEP</div>${leg.dep}</div>
-        <div><div class="lbl">ARR</div>${leg.arr}</div>
+        <div><div class="lbl">arrives</div>${leg.arr}</div>
       </div>
-      <div class="meta">Duration ${leg.dur}${leg.note ? ' · ' + leg.note : ''}</div>
+      <div class="meta">Duration ${leg.dur}${leg.note ? ' · ' + (leg.note === 'Outbound' ? 'Outbound' : leg.note === 'Return' ? 'Return' : leg.note === 'Same day' ? 'Same day' : leg.note) : ''}</div>
     </div>`
   );
 }
@@ -251,8 +266,8 @@ ORDER.forEach((code, idx) => {
     iconSize: [30, 30], iconAnchor: [15, 15], className: ''
   });
 
-  // Stay duration: for city idx, use LEGS[idx] (incoming leg) and LEGS[idx+1] (outgoing leg).
-  // Parse the arr field for "(+Nd)" notation to handle timezone crossings (e.g. BCN→SZX arrives Sep 24, not Sep 23).
+  // Stay: incoming=LEGS[idx], outgoing=LEGS[idx+1]
+  // Parse (+Nd) for timezone-crossing arrivals (e.g. BCN→SZX)
   const arriveLeg = LEGS[idx];
   const departLeg = LEGS[idx + 1];
   let arriveDateObj = arriveLeg?.date ? new Date(arriveLeg.date + ' 2026') : null;
@@ -265,11 +280,12 @@ ORDER.forEach((code, idx) => {
   let stayText = '';
   let arriveLabel = '';
   if (arriveDateObj) {
-    arriveLabel = arriveDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const m = arriveDateObj.toLocaleString('en-US', {month:'short'});
+    arriveLabel = `${m} ${arriveDateObj.getDate()}`;
   }
   if (arriveDateObj && departDateObj) {
     const days = Math.round((departDateObj - arriveDateObj) / 86400000);
-    stayText = `<div class="meta"><b>Stay:</b> ${days} day${days === 1 ? '' : 's'}</div>`;
+    stayText = `<div class="meta"><b>Stay: </b>${days}  days</div>`;
   }
 
   L.marker([city.lat, city.lon], { icon: icon, title: city.name }).addTo(map)
@@ -277,8 +293,8 @@ ORDER.forEach((code, idx) => {
       `<div class="popup-content">
         <div class="city">${city.name} · Stop ${idx + 1}</div>
         ${stayText}
-        <div class="meta"><b>Arrive:</b> ${arriveLabel || '—'}${arriveLeg?.arr && arriveLeg.arr !== 'TBD' ? ' · ' + arriveLeg.arr : ''}</div>
-        ${legOut && idx < ORDER.length - 1 ? `<div class="meta"><b>Depart:</b> ${legOut.date} → ${CITIES[ORDER[idx + 1]].name}${legOut.dep !== 'TBD' ? ' · ' + legOut.dep : ''}</div>` : ''}
+        <div class="meta"><b>Arrive: </b>${arriveLabel || '—'}${arriveLeg?.arr && arriveLeg.arr !== 'TBD' ? ' · ' + arriveLeg.arr : ''}</div>
+        ${legOut && idx < ORDER.length - 1 ? `<div class="meta"><b>Depart: </b>${legOut.date} →  ${CITIES[ORDER[idx + 1]].name}${legOut.dep !== 'TBD' ? ' · ' + legOut.dep : ''}</div>` : ''}
         ${attractionsHtml(code)}
       </div>`
     );
@@ -314,9 +330,9 @@ LEGS.forEach((leg, i) => {
   card.style.borderLeftColor = COLORS[leg.transport];
   const flightTag = leg.no !== '—' ? `<span style="background:${COLORS[leg.transport]}; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:700; margin-left:4px; font-family:monospace;">${leg.no}</span>` : '';
   card.innerHTML = `
-    <div class="date" style="color:${COLORS[leg.transport]}">${leg.date}${flightTag}</div>
-    <div class="route">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
-    <div class="meta">${leg.dep} → ${leg.arr} · ${leg.dur}</div>
+    <div class="date" style="color:${COLORS[leg.transport]}">${dateToEn(leg.date)}${flightTag}</div>
+    <div class="route">${CITIES[leg.from].name} →  ${CITIES[leg.to].name}</div>
+    <div class="meta">${leg.dep} →  ${leg.arr} · ${leg.dur}</div>
     ${leg.note ? `<div class="note">${leg.note}</div>` : ''}
     <div class="zoom-hint">Click to zoom on map ↗</div>
   `;
@@ -330,17 +346,35 @@ LEGS.forEach((leg, i) => {
     document.querySelectorAll('.leg-card.active').forEach(el => el.classList.remove('active'));
     card.classList.add('active');
 
-    // Long-haul: span > 60° means intercontinental. setView to destination only.
+    // Long-haul: >60° span →  fitBounds covers both ends
     const lonSpan = Math.abs(toCity.lon - fromCity.lon);
     if (lonSpan > 60) {
-      map.setView([toCity.lat, toCity.lon], 6, { animate: true });
-    } else {
+      // Long-haul: fitBounds both ends, same right shift applied
+      // Shows full arc, sidebar doesn't overlap
       map.fitBounds(
         [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
-        { padding: [80, 80], maxZoom: 9, animate: true }
+        {
+          paddingTopLeft: [LEFT_PADDING, 80],
+          paddingBottomRight: [80, 80],
+          maxZoom: 6, animate: true
+        }
+      );
+    } else {
+      // Domestic: asymmetric padding, left side avoids sidebar
+      // Leaflet Point: [x, y], x=horizontal, y=vertical
+      //   paddingTopLeft: [x, y] = [left padding, top padding]
+      //   paddingBottomRight: [x, y] = [right padding, bottom padding]
+      map.fitBounds(
+        [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
+        {
+          paddingTopLeft: [LEFT_PADDING, 80],     // 450px left, 80px top
+          paddingBottomRight: [80, 80],            // 80px right, 80px bottom
+          maxZoom: 9, animate: true
+        }
       );
     }
 
+    // Scroll sidebar to keep card visible
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
   legList.appendChild(card);

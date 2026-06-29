@@ -139,7 +139,83 @@
         crossorigin=""></script>
 <script>
 const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "澳门", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "香港", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "上海", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.034, "lon": 118.766}, "CTU": {"name": "成都", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "张家界", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "西安", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "北京", "lat": 40.08, "lon": 116.585}};
-const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "同日"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~3h", "note": "直达 (跳过杭州)"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "→ 天府 TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程"}];
+
+// 交通节点：机场和高铁站的具体位置，用于精确绘制航班起降和高铁进出
+// type: "airport" | "station"
+const TRANSPORT_NODES = {
+  "PVG":  {name: "浦东机场", lat: 31.143, lon: 121.805, type: "airport"},
+  "SHA_HQ": {name: "上海虹桥站", lat: 31.194, lon: 121.319, type: "station"},
+  "WHU_XY": {name: "芜宣机场", lat: 30.866, lon: 118.752, type: "airport"},
+  "TFU":  {name: "天府机场", lat: 30.312, lon: 104.441, type: "airport"},
+  "CTU_EAST": {name: "成都东站", lat: 30.630, lon: 104.144, type: "station"},
+  "CKG_NORTH": {name: "重庆北站", lat: 29.610, lon: 106.563, type: "station"},
+  "DYG_WEST":  {name: "张家界西站", lat: 29.131, lon: 110.473, type: "station"},
+  "XIY_NORTH": {name: "西安北站", lat: 34.379, lon: 108.937, type: "station"},
+  "PEK_WEST":  {name: "北京西站", lat: 39.895, lon: 116.323, type: "station"},
+};
+
+// HSR 实际路线 waypoint，用于绘制高铁的真实路径（不是直线）
+const HSR_ROUTES = {
+  "SHA→WHU": [
+    [31.194, 121.319], // 上海虹桥
+    [31.30,  120.59],  // 苏州
+    [31.57,  120.30],  // 无锡
+    [31.78,  119.95],  // 常州
+    [32.20,  119.43],  // 镇江
+    [31.97,  118.79],  // 南京南
+    [31.71,  118.55],  // 马鞍山东
+    [31.34,  118.38],  // 芜湖
+  ],
+  "CTU→CKG": [
+    [30.630, 104.144], // 成都东
+    [30.13,  104.65],  // 资阳北
+    [29.62,  105.06],  // 内江北
+    [29.36,  105.93],  // 永川东
+    [29.610, 106.563], // 重庆北
+  ],
+  "CKG→DYG": [
+    [29.610, 106.563], // 重庆北
+    [29.69,  107.39],  // 涪陵北
+    [30.30,  109.47],  // 恩施
+    [29.52,  108.97],  // 黔江
+    [29.131, 110.473], // 张家界西
+  ],
+  "XIY→PEK": [
+    [34.379, 108.937], // 西安北
+    [34.50,  110.10],  // 华山北
+    [34.62,  112.42],  // 洛阳龙门
+    [34.72,  113.78],  // 郑州东
+    [38.05,  114.51],  // 石家庄
+    [39.895, 116.323], // 北京西
+  ],
+};
+
+// 获取交通节点坐标：优先用 LEG 的 from_loc/to_loc，否则 fallback 到城市坐标
+function getLocCoords(leg, side) {
+  const key = side === 'from' ? leg.from_loc : leg.to_loc;
+  if (key && TRANSPORT_NODES[key]) return [TRANSPORT_NODES[key].lat, TRANSPORT_NODES[key].lon];
+  if (key && CITIES[key]) return [CITIES[key].lat, CITIES[key].lon];
+  const cityCode = leg[side];
+  return [CITIES[cityCode].lat, CITIES[cityCode].lon];
+}
+
+// 获取交通节点名称（用于显示）
+function getLocName(leg, side) {
+  const key = side === 'from' ? leg.from_loc : leg.to_loc;
+  if (key && TRANSPORT_NODES[key]) return TRANSPORT_NODES[key].name;
+  if (key && CITIES[key]) return CITIES[key].name;
+  return CITIES[leg[side]].name;
+}
+
+// 获取交通节点类型图标
+function getNodeIconSvg(type) {
+  return type === 'airport' ? '\u2708' : '\uD83D\uDE84'; // ✈ or 🚄
+}
+
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "同日"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG", "to_loc": "PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h 50m", "note": "虹桥出发 直达", "from_loc": "SHA_HQ"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "芜宣→天府 TFU", "from_loc": "WHU_XY", "to_loc": "TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1h 20m", "note": "", "from_loc": "CTU_EAST", "to_loc": "CKG_NORTH"}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~5h", "note": "渝利+黔张常", "from_loc": "CKG_NORTH", "to_loc": "DYG_WEST"}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": "", "from_loc": "XIY_NORTH", "to_loc": "PEK_WEST"}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程"}];
+
+// 注意：LEGS 顺序 = ORDER 映射 + LEGS[0] BCN→SZX + LEGS[10] PEK→BCN
+// 国内段索引: LEGS[1]~LEGS[9] 对应 ORDER[0]~ORDER[8]
 const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
 const TRANSPORT_LABEL = {"flight": "飞机", "train": "高铁", "ferry": "轮渡"};
 const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
@@ -224,6 +300,7 @@ function attractionsHtml(code) {
 }
 
 // === IN-CHINA ROUTE POLYLINES ===
+// 使用交通节点坐标（from_loc / to_loc），高铁段使用 HSR_ROUTES waypoints 画实际路线
 for (let i = 0; i < ORDER.length - 1; i++) {
   const fromCode = ORDER[i];
   const toCode = ORDER[i + 1];
@@ -231,13 +308,30 @@ for (let i = 0; i < ORDER.length - 1; i++) {
   const color = COLORS[leg.transport];
   const dash = leg.transport === 'ferry' ? '5,8' : (leg.transport === 'train' ? '8,5' : null);
 
+  // 获取端点坐标（优先 from_loc / to_loc）
+  const fromCoords = getLocCoords(leg, 'from');
+  const toCoords = getLocCoords(leg, 'to');
+
+  // 高铁段：使用实际路线 waypoints
+  const hsrKey = `${fromCode}→${toCode}`;
+  let polylinePoints;
+  if (leg.transport === 'train' && HSR_ROUTES[hsrKey]) {
+    polylinePoints = HSR_ROUTES[hsrKey];
+  } else {
+    polylinePoints = [fromCoords, toCoords];
+  }
+
+  const fromName = getLocName(leg, 'from');
+  const toName = getLocName(leg, 'to');
+
   L.polyline(
-    [[CITIES[fromCode].lat, CITIES[fromCode].lon], [CITIES[toCode].lat, CITIES[toCode].lon]],
+    polylinePoints,
     { color: color, weight: 4.5, opacity: 0.9, dashArray: dash }
   ).addTo(map).bindPopup(
     `<div class="popup-content">
       <div class="city">${dateToCn(leg.date)}</div>
       <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} → ${CITIES[toCode].name}</div>
+      <div class="meta" style="font-size:10px;color:#718096">${fromName} → ${toName}</div>
       ${leg.no !== '—' ? `<div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>` : `<div><span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>`}
       <div class="time-row">
         <div><div class="lbl">出发</div>${leg.dep}</div>
@@ -248,9 +342,8 @@ for (let i = 0; i < ORDER.length - 1; i++) {
   );
 }
 
-// === AIRPORT CONNECTORS (SHA ↔ PVG, CTU ↔ TFU) ===
-L.polyline(ARC_SHA_PVG.map(p => [p[0], p[1]]), { color: '#718096', weight: 2, opacity: 0.5, dashArray: '3,5' }).addTo(map);
-L.polyline(ARC_CTU_TFU.map(p => [p[0], p[1]]), { color: '#718096', weight: 2, opacity: 0.5, dashArray: '3,5' }).addTo(map);
+// Airport connector arcs (SHA↔PVG, CTU↔TFU) replaced by generic city↔node loop below.
+// ARC_SHA_PVG and ARC_CTU_TFU are still declared (as const) above — unused from now on.
 
 // === CITY MARKERS ===
 ORDER.forEach((code, idx) => {
@@ -311,14 +404,39 @@ L.marker([CITIES.BCN.lat, CITIES.BCN.lon], { icon: bcnIcon }).addTo(map)
     <div class="meta"><b>返程：</b>10月17日 · CA845 · 到达 08:15 CEST</div>
   </div>`);
 
-// === AIRPORT MARKERS (smaller, dashed border) ===
-['PVG', 'TFU'].forEach(code => {
-  const city = CITIES[code];
+// === TRANSPORT NODE MARKERS (airport + station) ===
+// 在地图上标出所有机场和高铁站的具体位置，用小号圆点 + 类型图标
+// 用透明图标的 label-only 方式避免重复样式冲突
+const transportNodeKeys = Object.keys(TRANSPORT_NODES);
+transportNodeKeys.forEach(code => {
+  const node = TRANSPORT_NODES[code];
   const icon = L.divIcon({
-    html: `<div class="airport-marker"></div>`,
+    html: `<div class="airport-marker" style="border-color:${node.type === 'airport' ? '#2b6cb0' : '#2f855a'}"></div>`,
     iconSize: [12, 12], iconAnchor: [6, 6], className: ''
   });
-  L.marker([city.lat, city.lon], { icon: icon, title: code, interactive: false }).addTo(map);
+  L.marker([node.lat, node.lon], { icon: icon, title: node.name, interactive: false }).addTo(map);
+});
+
+// 额外在虹桥站加一个 label（用 Leaflet 的 DivIcon 显示图标文字）
+// 其他节点不显式显示 label（靠线段的端点暗示）
+// 芜宣机场、重庆北站、张家界西站、西安北站、北京西站：灰色虚线连接线到城市中心
+const cityToNode = {
+  "SHA": "SHA_HQ",
+  "WHU": "WHU_XY",
+  "CTU": "CTU_EAST",
+  "CKG": "CKG_NORTH",
+  "DYG": "DYG_WEST",
+  "XIY": "XIY_NORTH",
+  "PEK": "PEK_WEST",
+};
+Object.entries(cityToNode).forEach(([cityCode, nodeCode]) => {
+  const city = CITIES[cityCode];
+  const node = TRANSPORT_NODES[nodeCode];
+  if (!city || !node) return;
+  L.polyline(
+    [[city.lat, city.lon], [node.lat, node.lon]],
+    { color: '#718096', weight: 1.5, opacity: 0.4, dashArray: '2,4' }
+  ).addTo(map);
 });
 
 // === SIDEBAR LEG CARDS ===
@@ -328,30 +446,35 @@ LEGS.forEach((leg, i) => {
   card.className = 'leg-card' + (i === 0 || i === 11 ? ' long-haul' : '');
   card.style.borderLeftColor = COLORS[leg.transport];
   const flightTag = leg.no !== '—' ? `<span style="background:${COLORS[leg.transport]}; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:700; margin-left:4px; font-family:monospace;">${leg.no}</span>` : '';
+  const fromName = getLocName(leg, 'from');
+  const toName = getLocName(leg, 'to');
+  const detailName = (fromName !== CITIES[leg.from].name || toName !== CITIES[leg.to].name)
+    ? `<div class="note">${fromName} → ${toName}</div>` : '';
   card.innerHTML = `
     <div class="date" style="color:${COLORS[leg.transport]}">${dateToCn(leg.date)}${flightTag}</div>
     <div class="route">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+    ${detailName}
     <div class="meta">${leg.dep} → ${leg.arr} · ${leg.dur}</div>
     ${leg.note ? `<div class="note">${leg.note}</div>` : ''}
     <div class="zoom-hint">点击跳转到地图 ↗</div>
   `;
   card.dataset.idx = i;
   card.addEventListener('click', () => {
-    const fromCity = CITIES[leg.from];
-    const toCity = CITIES[leg.to];
-    if (!fromCity || !toCity) return;
+    const fromCoords = getLocCoords(leg, 'from');
+    const toCoords = getLocCoords(leg, 'to');
+    if (!fromCoords || !toCoords) return;
 
     // 高亮当前卡片、取消其他高亮
     document.querySelectorAll('.leg-card.active').forEach(el => el.classList.remove('active'));
     card.classList.add('active');
 
     // 长航线：跨度 > 60° 视为洲际，不 fitBounds（会缩到全世界）→ 直接定位到目的地
-    const lonSpan = Math.abs(toCity.lon - fromCity.lon);
+    const lonSpan = Math.abs(toCoords[1] - fromCoords[1]);
     if (lonSpan > 60) {
       // 洲际：用 fitBounds 包住起点和终点，应用同样的右偏移
       // 这样能看到整条弧线，不会被侧边栏挡住
       map.fitBounds(
-        [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
+        [fromCoords, toCoords],
         {
           paddingTopLeft: [LEFT_PADDING, 80],
           paddingBottomRight: [80, 80],
@@ -364,7 +487,7 @@ LEGS.forEach((leg, i) => {
       //   paddingTopLeft: [x, y] = [左 padding, 顶 padding]
       //   paddingBottomRight: [x, y] = [右 padding, 底 padding]
       map.fitBounds(
-        [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
+        [fromCoords, toCoords],
         {
           paddingTopLeft: [LEFT_PADDING, 80],     // 600px 左, 80px 顶
           paddingBottomRight: [80, 80],            // 80px 右, 80px 底

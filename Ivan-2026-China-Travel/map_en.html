@@ -139,7 +139,75 @@
         crossorigin=""></script>
 <script>
 const CITIES = {"BCN": {"name": "Barcelona", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "Shenzhen", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "Macau", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "Hong Kong", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "Shanghai", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "Pudong (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "Hangzhou", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "Wuhu", "lat": 31.034, "lon": 118.766}, "CTU": {"name": "Chengdu", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "Tianfu (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "Chongqing", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "Zhangjiajie", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "Xi'an", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "Beijing", "lat": 40.08, "lon": 116.585}};
-const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "Outbound"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "morning", "arr": "morning", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "afternoon", "arr": "afternoon", "dur": "~1h", "note": "Same day"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→  Pudong PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~3h", "note": "Direct (skip Hangzhou)"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "→  Tianfu TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "Return"}];
+
+// Transport nodes: precise locations for airports and HSR stations
+// type: "airport" | "station"
+const TRANSPORT_NODES = {
+  "PVG":  {name: "Pudong Airport", lat: 31.143, lon: 121.805, type: "airport"},
+  "SHA_HQ": {name: "Hongqiao Station", lat: 31.194, lon: 121.319, type: "station"},
+  "WHU_XY": {name: "Wuhu Xuanzhou Airport", lat: 30.866, lon: 118.752, type: "airport"},
+  "TFU":  {name: "Tianfu Airport", lat: 30.312, lon: 104.441, type: "airport"},
+  "CTU_EAST": {name: "Chengdu East Station", lat: 30.630, lon: 104.144, type: "station"},
+  "CKG_NORTH": {name: "Chongqing North Station", lat: 29.610, lon: 106.563, type: "station"},
+  "DYG_WEST":  {name: "Zhangjiajie West Station", lat: 29.131, lon: 110.473, type: "station"},
+  "XIY_NORTH": {name: "Xi'an North Station", lat: 34.379, lon: 108.937, type: "station"},
+  "PEK_WEST":  {name: "Beijing West Station", lat: 39.895, lon: 116.323, type: "station"},
+};
+
+// HSR actual route waypoints (not straight lines)
+const HSR_ROUTES = {
+  "SHA→WHU": [
+    [31.194, 121.319], // Hongqiao
+    [31.30,  120.59],  // Suzhou
+    [31.57,  120.30],  // Wuxi
+    [31.78,  119.95],  // Changzhou
+    [32.20,  119.43],  // Zhenjiang
+    [31.97,  118.79],  // Nanjing South
+    [31.71,  118.55],  // Ma'anshan East
+    [31.34,  118.38],  // Wuhu
+  ],
+  "CTU→CKG": [
+    [30.630, 104.144], // Chengdu East
+    [30.13,  104.65],  // Ziyang North
+    [29.62,  105.06],  // Neijiang North
+    [29.36,  105.93],  // Yongchuan North
+    [29.610, 106.563], // Chongqing North
+  ],
+  "CKG→DYG": [
+    [29.610, 106.563], // Chongqing North
+    [29.69,  107.39],  // Fuling North
+    [30.30,  109.47],  // Enshi
+    [29.52,  108.97],  // Qianjiang
+    [29.131, 110.473], // Zhangjiajie West
+  ],
+  "XIY→PEK": [
+    [34.379, 108.937], // Xi'an North
+    [34.50,  110.10],  // Huashan North
+    [34.62,  112.42],  // Luoyang Longmen
+    [34.72,  113.78],  // Zhengzhou East
+    [38.05,  114.51],  // Shijiazhuang
+    [39.895, 116.323], // Beijing West
+  ],
+};
+
+// Get transport node coordinates, fallback to city center
+function getLocCoords(leg, side) {
+  const key = side === 'from' ? leg.from_loc : leg.to_loc;
+  if (key && TRANSPORT_NODES[key]) return [TRANSPORT_NODES[key].lat, TRANSPORT_NODES[key].lon];
+  if (key && CITIES[key]) return [CITIES[key].lat, CITIES[key].lon];
+  const cityCode = leg[side];
+  return [CITIES[cityCode].lat, CITIES[cityCode].lon];
+}
+
+// Get transport node name for display
+function getLocName(leg, side) {
+  const key = side === 'from' ? leg.from_loc : leg.to_loc;
+  if (key && TRANSPORT_NODES[key]) return TRANSPORT_NODES[key].name;
+  if (key && CITIES[key]) return CITIES[key].name;
+  return CITIES[leg[side]].name;
+}
+
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "Outbound"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "morning", "arr": "morning", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "afternoon", "arr": "afternoon", "dur": "~1h", "note": "Same day"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ Pudong PVG", "to_loc": "PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~2h 50m", "note": "From Hongqiao SH", "from_loc": "SHA_HQ"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "Xuanzhou→Tianfu TFU", "from_loc": "WHU_XY", "to_loc": "TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1h 20m", "note": "", "from_loc": "CTU_EAST", "to_loc": "CKG_NORTH"}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~5h", "note": "Yu-Li + Qian-Zhang-Chang Rwy", "from_loc": "CKG_NORTH", "to_loc": "DYG_WEST"}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~4.5h", "note": "", "from_loc": "XIY_NORTH", "to_loc": "PEK_WEST"}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "Return"}];
 const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
 const TRANSPORT_LABEL = {"flight": "Flight", "train": "High-speed Rail", "ferry": "Ferry"};
 const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
@@ -229,20 +297,37 @@ function attractionsHtml(code) {
 }
 
 // === IN-CHINA ROUTE POLYLINES ===
+// Using transport node coords (from_loc / to_loc), HSR legs use waypoints
 for (let i = 0; i < ORDER.length - 1; i++) {
   const fromCode = ORDER[i];
   const toCode = ORDER[i + 1];
-  const leg = LEGS[i + 1];  // skip legs[0] (BCN→ SZX long-haul)
+  const leg = LEGS[i + 1];  // skip legs[0] (BCN→SZX long-haul)
   const color = COLORS[leg.transport];
   const dash = leg.transport === 'ferry' ? '5,8' : (leg.transport === 'train' ? '8,5' : null);
 
+  const fromCoords = getLocCoords(leg, 'from');
+  const toCoords = getLocCoords(leg, 'to');
+
+  // HSR legs: use actual route waypoints
+  const hsrKey = `${fromCode}→${toCode}`;
+  let polylinePoints;
+  if (leg.transport === 'train' && HSR_ROUTES[hsrKey]) {
+    polylinePoints = HSR_ROUTES[hsrKey];
+  } else {
+    polylinePoints = [fromCoords, toCoords];
+  }
+
+  const fromName = getLocName(leg, 'from');
+  const toName = getLocName(leg, 'to');
+
   L.polyline(
-    [[CITIES[fromCode].lat, CITIES[fromCode].lon], [CITIES[toCode].lat, CITIES[toCode].lon]],
+    polylinePoints,
     { color: color, weight: 4.5, opacity: 0.9, dashArray: dash }
   ).addTo(map).bindPopup(
     `<div class="popup-content">
       <div class="city">${dateToEn(leg.date)}</div>
-      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} →  ${CITIES[toCode].name}</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} → ${CITIES[toCode].name}</div>
+      <div class="meta" style="font-size:10px;color:#718096">${fromName} → ${toName}</div>
       ${leg.no !== '—' ? `<div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>` : `<div><span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>`}
       <div class="time-row">
         <div><div class="lbl">DEP</div>${leg.dep}</div>
@@ -253,9 +338,8 @@ for (let i = 0; i < ORDER.length - 1; i++) {
   );
 }
 
-// === AIRPORT CONNECTORS (SHA ↔ PVG, CTU ↔ TFU) ===
-L.polyline(ARC_SHA_PVG.map(p => [p[0], p[1]]), { color: '#718096', weight: 2, opacity: 0.5, dashArray: '3,5' }).addTo(map);
-L.polyline(ARC_CTU_TFU.map(p => [p[0], p[1]]), { color: '#718096', weight: 2, opacity: 0.5, dashArray: '3,5' }).addTo(map);
+// Airport connector arcs replaced by generic city↔node loop below.
+// ARC_SHA_PVG and ARC_CTU_TFU still declared (const) above — unused.
 
 // === CITY MARKERS ===
 ORDER.forEach((code, idx) => {
@@ -317,14 +401,35 @@ L.marker([CITIES.BCN.lat, CITIES.BCN.lon], { icon: bcnIcon }).addTo(map)
     <div class="meta"><b>Return:</b> Oct 17 · CA845 · arrives 08:15 CEST</div>
   </div>`);
 
-// === AIRPORT MARKERS (smaller, dashed border) ===
-['PVG', 'TFU'].forEach(code => {
-  const city = CITIES[code];
+// === TRANSPORT NODE MARKERS (airport + station) ===
+const transportNodeKeys = Object.keys(TRANSPORT_NODES);
+transportNodeKeys.forEach(code => {
+  const node = TRANSPORT_NODES[code];
   const icon = L.divIcon({
-    html: `<div class="airport-marker"></div>`,
+    html: `<div class="airport-marker" style="border-color:${node.type === 'airport' ? '#2b6cb0' : '#2f855a'}"></div>`,
     iconSize: [12, 12], iconAnchor: [6, 6], className: ''
   });
-  L.marker([city.lat, city.lon], { icon: icon, title: code, interactive: false }).addTo(map);
+  L.marker([node.lat, node.lon], { icon: icon, title: node.name, interactive: false }).addTo(map);
+});
+
+// City ↔ transport node connector lines (grey dashed)
+const cityToNode = {
+  "SHA": "SHA_HQ",
+  "WHU": "WHU_XY",
+  "CTU": "CTU_EAST",
+  "CKG": "CKG_NORTH",
+  "DYG": "DYG_WEST",
+  "XIY": "XIY_NORTH",
+  "PEK": "PEK_WEST",
+};
+Object.entries(cityToNode).forEach(([cityCode, nodeCode]) => {
+  const city = CITIES[cityCode];
+  const node = TRANSPORT_NODES[nodeCode];
+  if (!city || !node) return;
+  L.polyline(
+    [[city.lat, city.lon], [node.lat, node.lon]],
+    { color: '#718096', weight: 1.5, opacity: 0.4, dashArray: '2,4' }
+  ).addTo(map);
 });
 
 // === SIDEBAR LEG CARDS ===
@@ -334,30 +439,33 @@ LEGS.forEach((leg, i) => {
   card.className = 'leg-card' + (i === 0 || i === 11 ? ' long-haul' : '');
   card.style.borderLeftColor = COLORS[leg.transport];
   const flightTag = leg.no !== '—' ? `<span style="background:${COLORS[leg.transport]}; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:700; margin-left:4px; font-family:monospace;">${leg.no}</span>` : '';
+  const fromName = getLocName(leg, 'from');
+  const toName = getLocName(leg, 'to');
+  const detailName = (fromName !== CITIES[leg.from].name || toName !== CITIES[leg.to].name)
+    ? `<div class="note">${fromName} → ${toName}</div>` : '';
   card.innerHTML = `
     <div class="date" style="color:${COLORS[leg.transport]}">${dateToEn(leg.date)}${flightTag}</div>
-    <div class="route">${CITIES[leg.from].name} →  ${CITIES[leg.to].name}</div>
-    <div class="meta">${leg.dep} →  ${leg.arr} · ${leg.dur}</div>
+    <div class="route">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+    ${detailName}
+    <div class="meta">${leg.dep} → ${leg.arr} · ${leg.dur}</div>
     ${leg.note ? `<div class="note">${leg.note}</div>` : ''}
     <div class="zoom-hint">Click to zoom on map ↗</div>
   `;
   card.dataset.idx = i;
   card.addEventListener('click', () => {
-    const fromCity = CITIES[leg.from];
-    const toCity = CITIES[leg.to];
-    if (!fromCity || !toCity) return;
+    const fromCoords = getLocCoords(leg, 'from');
+    const toCoords = getLocCoords(leg, 'to');
+    if (!fromCoords || !toCoords) return;
 
     // Highlight active card
     document.querySelectorAll('.leg-card.active').forEach(el => el.classList.remove('active'));
     card.classList.add('active');
 
-    // Long-haul: >60° span →  fitBounds covers both ends
-    const lonSpan = Math.abs(toCity.lon - fromCity.lon);
+    // Long-haul: >60° span → fitBounds covers both ends
+    const lonSpan = Math.abs(toCoords[1] - fromCoords[1]);
     if (lonSpan > 60) {
-      // Long-haul: fitBounds both ends, same right shift applied
-      // Shows full arc, sidebar doesn't overlap
       map.fitBounds(
-        [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
+        [fromCoords, toCoords],
         {
           paddingTopLeft: [LEFT_PADDING, 80],
           paddingBottomRight: [80, 80],
@@ -365,15 +473,11 @@ LEGS.forEach((leg, i) => {
         }
       );
     } else {
-      // Domestic: asymmetric padding, left side avoids sidebar
-      // Leaflet Point: [x, y], x=horizontal, y=vertical
-      //   paddingTopLeft: [x, y] = [left padding, top padding]
-      //   paddingBottomRight: [x, y] = [right padding, bottom padding]
       map.fitBounds(
-        [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
+        [fromCoords, toCoords],
         {
-          paddingTopLeft: [LEFT_PADDING, 80],     // 450px left, 80px top
-          paddingBottomRight: [80, 80],            // 80px right, 80px bottom
+          paddingTopLeft: [LEFT_PADDING, 80],
+          paddingBottomRight: [80, 80],
           maxZoom: 9, animate: true
         }
       );

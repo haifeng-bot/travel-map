@@ -173,9 +173,13 @@ const ARC_CTU_TFU = [[30.578, 103.947], [30.56142963849066, 103.97795408778494],
 
 const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, worldCopyJump: true });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// English map: use CartoDB Voyager which renders Pinyin/English labels globally,
+// so Chinese cities show as 'CHANGNING DISTRICT', 'Pudong', 'Wuhu', etc.
+// (OSM default renders local-language labels → Chinese characters in China.)
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
   maxZoom: 18,
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  subdomains: 'abcd',
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>'
 }).addTo(map);
 
 // Fit bounds to all main markers

@@ -207,10 +207,11 @@ drawLongArc(ARC_BCN_SZX, COLORS.flight, LEGS[0], 0.5);
 drawLongArc(ARC_PEK_BCN, COLORS.flight, LEGS[10], 0.5);
 
 // Format leg popup date
-function dateToCn(dateStr) {
+function dateToEn(dateStr) {
   const d = new Date(dateStr + ' 2026');
   if (isNaN(d.getTime())) return dateStr;
-  const m = d.toLocaleString("en-US", {month:"short"}); return `${m} ${d.getDate()}`;
+  const m = d.toLocaleString("en-US", {month:"short"});
+  return `${m} ${d.getDate()}`;
 }
 
 // Attractions → HTML chip list

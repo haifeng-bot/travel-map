@@ -145,10 +145,11 @@ const CITIES = {"BCN": {"name": "Barcelona", "lat": 41.297, "lon": 2.083}, "SZX"
 const TRANSPORT_NODES = {
   "PVG":  {name: "Pudong Airport", lat: 31.143, lon: 121.805, type: "airport"},
   "SHA_HQ": {name: "Hongqiao Station", lat: 31.194, lon: 121.319, type: "station"},
-  "WHU_XY": {name: "Wuhu Xuanzhou Airport", lat: 30.866, lon: 118.752, type: "airport"},
+  "WHU_XY": {name: "Wuhu Xuanzhou Airport", lat: 30.852, lon: 118.752, type: "airport"},
   "TFU":  {name: "Tianfu Airport", lat: 30.312, lon: 104.441, type: "airport"},
   "CTU_EAST": {name: "Chengdu East Station", lat: 30.630, lon: 104.144, type: "station"},
   "CKG_NORTH": {name: "Chongqing North Station", lat: 29.610, lon: 106.563, type: "station"},
+  "CKG_EAST": {name: "Chongqing East Station", lat: 29.476, lon: 106.654, type: "station"},
   "DYG_WEST":  {name: "Zhangjiajie West Station", lat: 29.131, lon: 110.473, type: "station"},
   "XIY_NORTH": {name: "Xi'an North Station", lat: 34.379, lon: 108.937, type: "station"},
   "PEK_WEST":  {name: "Beijing West Station", lat: 39.895, lon: 116.323, type: "station"},
@@ -174,9 +175,9 @@ const HSR_ROUTES = {
     [29.610, 106.563], // Chongqing North
   ],
   "CKG→DYG": [
-    [29.610, 106.563], // Chongqing North
-    [29.69,  107.39],  // Fuling North
-    [30.30,  109.47],  // Enshi
+    [29.476, 106.654], // Chongqing East (Yu-Xiang HSR, opened 2025)
+    [29.32,  107.76],  // Wulong South
+    [29.30,  108.16],  // Pengshui West
     [29.52,  108.97],  // Qianjiang
     [29.131, 110.473], // Zhangjiajie West
   ],
@@ -207,7 +208,7 @@ function getLocName(leg, side) {
   return CITIES[leg[side]].name;
 }
 
-const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "Outbound"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "morning", "arr": "morning", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "afternoon", "arr": "afternoon", "dur": "~1h", "note": "Same day"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ Pudong PVG", "to_loc": "PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~2h 50m", "note": "From Hongqiao SH", "from_loc": "SHA_HQ"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "Xuanzhou→Tianfu TFU", "from_loc": "WHU_XY", "to_loc": "TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1h 20m", "note": "", "from_loc": "CTU_EAST", "to_loc": "CKG_NORTH"}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~5h", "note": "Yu-Li + Qian-Zhang-Chang Rwy", "from_loc": "CKG_NORTH", "to_loc": "DYG_WEST"}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~4.5h", "note": "", "from_loc": "XIY_NORTH", "to_loc": "PEK_WEST"}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "Return"}];
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "Outbound"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "morning", "arr": "morning", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "afternoon", "arr": "afternoon", "dur": "~1h", "note": "Same day"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ Pudong PVG", "to_loc": "PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~2h 50m", "note": "From Hongqiao SH", "from_loc": "SHA_HQ"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "Xuanzhou→Tianfu TFU", "from_loc": "WHU_XY", "to_loc": "TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~1h 20m", "note": "", "from_loc": "CTU_EAST", "to_loc": "CKG_NORTH"}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~2h", "note": "Yu-Xiang HSR", "from_loc": "CKG_EAST", "to_loc": "DYG_WEST"}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "TBD", "arr": "TBD", "dur": "~4.5h", "note": "", "from_loc": "XIY_NORTH", "to_loc": "PEK_WEST"}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "Return"}];
 const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
 const TRANSPORT_LABEL = {"flight": "Flight", "train": "High-speed Rail", "ferry": "Ferry"};
 const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
@@ -409,7 +410,11 @@ transportNodeKeys.forEach(code => {
     html: `<div class="airport-marker" style="border-color:${node.type === 'airport' ? '#2b6cb0' : '#2f855a'}"></div>`,
     iconSize: [12, 12], iconAnchor: [6, 6], className: ''
   });
-  L.marker([node.lat, node.lon], { icon: icon, title: node.name, interactive: false }).addTo(map);
+  L.marker([node.lat, node.lon], { icon: icon, title: node.name })
+    .bindTooltip(node.name + (node.type === 'airport' ? ' ✈' : ' 🚄'), {
+      direction: 'right', offset: [8, 0], opacity: 0.95
+    })
+    .addTo(map);
 });
 
 // City ↔ transport node connector lines (grey dashed)
@@ -417,7 +422,7 @@ const cityToNode = {
   "SHA": "SHA_HQ",
   "WHU": "WHU_XY",
   "CTU": "CTU_EAST",
-  "CKG": "CKG_NORTH",
+  "CKG": "CKG_EAST",
   "DYG": "DYG_WEST",
   "XIY": "XIY_NORTH",
   "PEK": "PEK_WEST",

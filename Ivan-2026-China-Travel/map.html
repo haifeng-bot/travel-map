@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>中国旅行行程 — 2026 年 9 月 23 日至 10 月 17 日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #faf6ef; color: #1a202c; }
+  #map { position: absolute; inset: 0; background: #e8eef5; }
+
+  .sidebar {
+    position: absolute; left: 12px; top: 12px; width: 310px;
+    max-height: calc(100vh - 24px); overflow-y: auto;
+    background: rgba(255,255,255,0.97); border-radius: 10px;
+    padding: 14px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    z-index: 1000; font-size: 13px;
+  }
+  .sidebar h1 { font-size: 17px; margin: 0 0 4px; letter-spacing: 0.2px; }
+  .sidebar .subtitle { color: #718096; font-size: 11px; margin-bottom: 12px; }
+  .leg-card {
+    padding: 8px 10px; margin-bottom: 6px; border-radius: 6px;
+    border-left: 4px solid; background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  }
+  .leg-card:hover { transform: translateX(2px); box-shadow: 0 2px 6px rgba(0,0,0,0.10); background: #f7faff; }
+  .leg-card.active { background: #ebf8ff; box-shadow: 0 2px 6px rgba(43,108,176,0.18); }
+  .leg-card .date { font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
+  .leg-card .route { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .leg-card .meta { font-size: 10px; color: #4a5568; margin-top: 2px; font-family: monospace; }
+  .leg-card .note { font-size: 10px; color: #718096; margin-top: 2px; font-style: italic; }
+  .leg-card.long-haul { background: #f7faff; }
+  .leg-card .zoom-hint { font-size: 9px; color: #a0aec0; margin-top: 3px; opacity: 0; transition: opacity 0.12s; }
+  .leg-card:hover .zoom-hint { opacity: 1; }
+
+  .legend {
+    position: absolute; right: 12px; bottom: 12px;
+    background: rgba(255,255,255,0.97); padding: 10px 12px;
+    border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; font-size: 12px;
+  }
+  .legend .legend-title { font-weight: 700; font-size: 11px; margin-bottom: 6px; color: #4a5568; letter-spacing: 0.3px; }
+  .legend-item { display: flex; align-items: center; margin: 4px 0; }
+  .legend-line { width: 36px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  .scale-tip {
+    position: absolute; right: 12px; top: 12px;
+    background: rgba(255,255,255,0.97); padding: 8px 12px;
+    border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; font-size: 11px; color: #4a5568;
+  }
+  .scale-tip kbd {
+    background: #edf2f7; border: 1px solid #cbd5e0;
+    border-radius: 3px; padding: 1px 5px; font-family: monospace;
+    font-size: 10px;
+  }
+
+  .custom-marker {
+    background: #fff; border-radius: 50%;
+    border: 3px solid; width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+  }
+  .marker-bcn {
+    background: #eef2ff; border-color: #667eea;
+    color: #2b6cb0; font-size: 14px;
+  }
+  .airport-marker {
+    background: #fff; border: 2px dashed #2b6cb0;
+    width: 12px; height: 12px; border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .popup-content { font-family: inherit; min-width: 220px; }
+  .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .popup-content .meta { font-size: 11px; color: #4a5568; margin-top: 3px; }
+  .popup-content .attractions {
+    margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0;
+  }
+  .popup-content .attractions-title {
+    font-size: 9px; color: #718096; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 700;
+  }
+  .popup-content .attractions ul {
+    margin: 0; padding: 0; list-style: none;
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .popup-content .attractions li {
+    display: inline-block; background: #edf2f7; color: #2d3748;
+    padding: 2px 7px; border-radius: 10px; font-size: 10px;
+  }
+  .popup-content .tag {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; color: #fff; margin-top: 4px;
+  }
+  .popup-content .flight-no {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    background: #2b6cb0; color: #fff; font-size: 10px; font-weight: 700;
+    margin-left: 6px; font-family: monospace;
+  }
+  .popup-content .time-row {
+    display: flex; gap: 12px; margin-top: 6px; font-size: 11px;
+    color: #1a202c; font-family: monospace;
+  }
+  .popup-content .time-row .lbl { color: #718096; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .leaflet-popup-content-wrapper { border-radius: 8px; }
+  .leaflet-popup-content { margin: 10px 14px; }
+  .leaflet-container { font: inherit; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="sidebar">
+  <h1>中国旅行行程</h1>
+  <div class="subtitle">2026 年 9 月 23 日 – 10 月 17 日 · 11 站 · 25 天</div>
+  <div id="leg-list"></div>
+</div>
+
+<div class="legend">
+  <div class="legend-title">图例</div>
+  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>✈ 飞机</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#2f855a 0,#2f855a 7px,transparent 7px,transparent 11px)"></div>🚄 高铁</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#d69e2e 0,#d69e2e 3px,transparent 3px,transparent 6px)"></div>⛴ 轮渡</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,rgba(43,108,176,0.45) 0,rgba(43,108,176,0.45) 9px,transparent 9px,transparent 14px); border-radius:0;"></div>洲际航线弧</div>
+</div>
+
+<div class="scale-tip">
+  滚轮 / <kbd>+</kbd> <kbd>−</kbd> 缩放 · 拖动平移
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script>
+const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "澳门", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "香港", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "上海", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.034, "lon": 118.766}, "CTU": {"name": "成都", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "张家界", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "西安", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "北京", "lat": 40.08, "lon": 116.585}};
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "同日"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG"}, {"date": "Sep 30", "from": "SHA", "to": "HGH", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1h", "note": ""}, {"date": "Oct 02", "from": "HGH", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h", "note": ""}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "→ 天府 TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程"}];
+const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
+const TRANSPORT_LABEL = {"flight": "飞机", "train": "高铁", "ferry": "轮渡"};
+const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
+const ORDER = ["SZX", "MFM", "HKG", "SHA", "HGH", "WHU", "CTU", "CKG", "DYG", "XIY", "PEK"];
+// 景点推荐（可随时补充；停时间为 0 天的城市仍会列出以供下次参考）
+const ATTRACTIONS = {
+  SZX: ["世界之窗", "欢乐谷", "东部华侨城", "锦绣中华民俗村"],
+  MFM: ["大三巴牌坊", "妈阁庙", "威尼斯人", "议事亭前地"],
+  HKG: ["维多利亚港", "太平山顶", "香港迪士尼", "海洋公园", "庙街夜市"],
+  SHA: ["外滩", "东方明珠", "豫园", "田子坊", "上海博物馆"],
+  HGH: ["西湖", "灵隐寺", "雷峰塔", "龙井村"],
+  WHU: ["鸠兹广场", "镜湖公园", "奇瑞工业园"],
+  CTU: ["大熊猫繁育基地", "宽窄巷子", "武侯祠", "锦里"],
+  CKG: ["洪崖洞", "磁器口古镇", "解放碑", "武隆天生三桥"],
+  DYG: ["张家界国家森林公园", "天门山", "黄龙洞", "大峡谷玻璃桥"],
+  XIY: ["秦始皇兵马俑", "大雁塔", "西安古城墙", "回民街"],
+  PEK: ["故宫", "万里长城", "天坛", "颐和园", "圆明园"]
+};
+const AIRPORT_ALIAS = {"PVG": "SHA", "TFU": "CTU"};
+const ARC_BCN_SZX = [[41.297, 2.0829999999999997], [42.010647619986784, 3.7084919542346664], [42.70084847713824, 5.370255192746981], [43.36649526332766, 7.068703634054539], [44.006458674865286, 8.804102441605215], [44.619591955912576, 10.576548585498104], [45.20473628411615, 12.385951168293257], [45.76072702939982, 14.232011968520446], [46.28640089692412, 16.11420674301838], [46.78060394038898, 18.03176791112733], [47.24220040227579, 19.98366931322748], [47.67008230386124, 21.968613785399324], [48.06317967089558, 23.98502431283206], [48.4204712422355, 26.031039509002156], [48.74099547045246, 28.104514108716582], [49.02386158791976, 30.203025056192093], [49.26826048181783, 32.32388361301719], [49.47347509966906, 34.46415370789166], [49.63889009602103, 36.620676507996265], [49.76400043286207, 38.790100923077], [49.848418662626315, 40.96891947445843], [49.89188065356446, 43.15350869185793], [49.894249561979834, 45.34017296184662], [49.85551791232078, 47.525190562812675], [49.77580771124858, 49.704860498656096], [49.65536859160794, 51.87554869810175], [49.49457405229463, 54.033732182553535], [49.29391592589673, 56.1760399195711], [49.05399726364972, 58.29928926114052], [48.77552387345237, 60.40051710013184], [48.45929477926446, 62.47700514524605], [48.10619188817332, 64.52629899356792], [47.717169154977874, 66.54622095069023], [47.29324152454336, 68.53487679421637], [46.835473911474025, 70.49065688438056], [46.34497044739565, 72.4122321874509], [45.82286419110899, 74.29854589019581], [45.27030745879295, 76.14880134796702], [44.688462892761336, 77.96244712922926], [44.07849535006001, 79.73915990232206], [43.441564657999265, 81.47882586380784], [42.77881925361981, 83.18152134020663], [42.0913906986936, 84.84749311409008], [41.38038904136997, 86.47713893832665], [40.64689897987836, 88.07098861443735], [39.89197677244796, 89.62968592690872], [39.11664783030423, 91.15397164800142], [38.32190492667567, 92.64466775901374], [37.50870695358931, 94.10266297506655], [36.67797815926504, 95.52889961146447], [35.830607801598546, 96.92436179019475], [34.967450157075085, 98.29006495440476], [34.089324829075785, 99.627046635789], [33.197017304594404, 100.93635840364217], [32.29127971360851, 102.21905891381142], [31.37283175054687, 103.47620796986992], [30.442361722312683, 104.70886150658521], [29.50052769206094, 105.91806740632593], [28.547958692319202, 107.10486206171961], [27.58525598504997, 108.27026760203226], [26.61299434986454, 109.41528970589383], [25.631723384815675, 110.54091592874488], [24.641968807033585, 111.64811447941878], [23.64423374294953, 112.73783338636615], [22.639000000000003, 113.811]];
+const ARC_PEK_BCN = [[40.08, 116.585], [40.96376204370682, 115.44392069093121], [41.83597004957976, 114.27207052243192], [42.69593983667228, 113.06806913566976], [43.54294790437815, 111.83051136793556], [44.37622966630204, 110.55797357045424], [45.1949777880142, 109.2490214597928], [45.99834067862631, 107.90221971031687], [46.78542119560416, 106.5161435025755], [47.55527563256313, 105.08939224342903], [48.306913070783686, 103.62060566562435], [49.03929518652251, 102.10848249434987], [49.75133661741926, 100.55180183264369], [50.441906001763726, 98.94944736267415], [51.10982781324208, 97.30043438209495], [51.75388511994809, 95.6039395904233], [52.37282339862306, 93.85933340702675], [52.96535553177642, 92.06621443862142], [53.53016810489876, 90.22444552124374], [54.065929101746214, 88.33419054370175], [54.5712970661192, 86.39595102486584], [55.04493175751329, 84.41060117897545], [55.48550627494645, 82.37941997976462], [55.891720558561616, 80.30411854892343], [56.26231610389322, 78.18686107427122], [56.596091642050794, 76.03027743661607], [56.891919455161116, 73.83746581838888], [57.148761916330415, 71.61198380242024], [57.365687774365284, 69.35782685546305], [57.54188765323155, 67.07939362279568], [57.676688212047054, 64.78143811375149], [57.7695644191823, 62.469009590696], [57.82014943720576, 60.14738172684225], [57.828241694091325, 57.821973301877186], [57.7938088266921, 55.49826328737985], [57.716988317719064, 53.18170357345335], [57.598084797107305, 50.87763275890364], [57.43756413066749, 48.59119435002326], [57.23604456097203, 46.32726239649038], [56.994285286427065, 44.09037707308552], [56.71317295593243, 41.88469205003762], [56.393706613390755, 39.713934752195534], [56.03698164732708, 37.581379859179485], [55.64417328827532, 35.48983570903658], [55.21652015544151, 33.44164268602413], [54.75530829136169, 31.438682229965824], [54.261856046504185, 29.482394812327772], [53.73750009252136, 27.573805078288537], [53.18358275972314, 25.713552337553427], [52.601440816551374, 23.901924674495977], [51.99239574005618, 22.138895112044914], [51.35774546876916, 20.424158475601118], [50.69875758376592, 18.757167838262006], [50.016663829893965, 17.13716966645198], [49.31265586614656, 15.563237010592534], [48.587882120572004, 14.034300288606527], [47.843445619280345, 12.549175385142217], [47.08040265938584, 11.106588934262893], [46.29976220053741, 9.70520076842408], [45.5024858576607, 8.343623604057013], [44.68948838749934, 7.020440097230599], [43.86163857256527, 5.734217445379102], [43.01976041746672, 4.48351973672445], [42.16463458374975, 3.2669182613422314], [41.297, 2.0829999999999997]];
+const ARC_SHA_PVG = [[31.197, 121.336], [31.193674833125854, 121.36532810242726], [31.190343015540158, 121.39465414177164], [31.187004548584017, 121.4239781143281], [31.18365943360094, 121.45330001639489], [31.180307671936813, 121.48261984427349], [31.176949264939942, 121.51193759426857], [31.173584213960996, 121.54125326268816], [31.170212520353047, 121.57056684584347], [31.16683418547154, 121.59987834004902], [31.163449210674333, 121.62918774162256], [31.160057597321632, 121.65849504688516], [31.156659346776046, 121.68780025216111], [31.153254460402547, 121.71710335377804], [31.149842939568494, 121.74640434806682], [31.146424785643617, 121.77570323136165], [31.143, 121.805]];
+const ARC_CTU_TFU = [[30.578, 103.947], [30.56142963849066, 103.97795408778494], [30.54485195768734, 104.00889760272918], [30.528266964924203, 104.03983055076498], [30.511674667531146, 104.07075293783244], [30.495075072833902, 104.1016647698796], [30.478468188153922, 104.13256605286234], [30.461854020808477, 104.16345679274434], [30.445232578110534, 104.19433699549714], [30.428603867368896, 104.22520666709998], [30.411967895888086, 104.2560658135399], [30.3953246709684, 104.28691444081163], [30.37867419990588, 104.31775255491762], [30.362016489992342, 104.3485801618679], [30.345351548515346, 104.37939726768026], [30.328679382758214, 104.41020387837999], [30.311999999999998, 104.441]];
+
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, worldCopyJump: true });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// Fit bounds to all main markers
+const fitPoints = ORDER.map(c => [CITIES[c].lat, CITIES[c].lon]);
+fitPoints.push([CITIES.BCN.lat, CITIES.BCN.lon]);
+map.fitBounds(fitPoints, { padding: [80, 80] });
+
+// === LONG-HAUL FLIGHT ARCS (drawn first so they sit behind markers) ===
+function drawLongArc(points, color, leg, opacity = 0.45) {
+  const latlngs = points.map(p => [p[0], p[1]]);
+  return L.polyline(latlngs, {
+    color: color, weight: 4, opacity: opacity,
+    dashArray: '9, 12', lineCap: 'round'
+  }).addTo(map).bindPopup(
+    `<div class="popup-content">
+      <div class="city">${dateToCn(leg.date)} · 洲际航线</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+      <div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>
+      <div class="time-row">
+        <div><div class="lbl">出发</div>${leg.dep}</div>
+        <div><div class="lbl">到达</div>${leg.arr}</div>
+      </div>
+      <div class="meta">时长 ${leg.dur}${leg.note ? ' · ' + (leg.note === 'Outbound' ? '去程' : leg.note === 'Return' ? '返程' : leg.note) : ''}</div>
+    </div>`
+  );
+}
+
+drawLongArc(ARC_BCN_SZX, COLORS.flight, LEGS[0], 0.5);
+drawLongArc(ARC_PEK_BCN, COLORS.flight, LEGS[11], 0.5);
+
+// 将英文日期格式转为中文（替换 Leg 弹出窗日期）
+function dateToCn(dateStr) {
+  const d = new Date(dateStr + ' 2026');
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+// 景点推荐 → HTML chip 列表
+function attractionsHtml(code) {
+  const list = ATTRACTIONS[code];
+  if (!list || !list.length) return '';
+  return `<div class="attractions">
+      <div class="attractions-title">景点推荐</div>
+      <ul>${list.map(a => `<li>${a}</li>`).join('')}</ul>
+    </div>`;
+}
+
+// === IN-CHINA ROUTE POLYLINES ===
+for (let i = 0; i < ORDER.length - 1; i++) {
+  const fromCode = ORDER[i];
+  const toCode = ORDER[i + 1];
+  const leg = LEGS[i + 1];  // skip legs[0] (BCN→SZX long-haul)
+  const color = COLORS[leg.transport];
+  const dash = leg.transport === 'ferry' ? '5,8' : (leg.transport === 'train' ? '8,5' : null);
+
+  L.polyline(
+    [[CITIES[fromCode].lat, CITIES[fromCode].lon], [CITIES[toCode].lat, CITIES[toCode].lon]],
+    { color: color, weight: 4.5, opacity: 0.9, dashArray: dash }
+  ).addTo(map).bindPopup(
+    `<div class="popup-content">
+      <div class="city">${dateToCn(leg.date)}</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} → ${CITIES[toCode].name}</div>
+      ${leg.no !== '—' ? `<div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>` : `<div><span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>`}
+      <div class="time-row">
+        <div><div class="lbl">出发</div>${leg.dep}</div>
+        <div><div class="lbl">到达</div>${leg.arr}</div>
+      </div>
+      <div class="meta">时长 ${leg.dur}${leg.note ? ' · ' + (leg.note === 'Outbound' ? '去程' : leg.note === 'Return' ? '返程' : leg.note === 'Same day' ? '同日' : leg.note) : ''}</div>
+    </div>`
+  );
+}
+
+// === AIRPORT CONNECTORS (SHA ↔ PVG, CTU ↔ TFU) ===
+L.polyline(ARC_SHA_PVG.map(p => [p[0], p[1]]), { color: '#718096', weight: 2, opacity: 0.5, dashArray: '3,5' }).addTo(map);
+L.polyline(ARC_CTU_TFU.map(p => [p[0], p[1]]), { color: '#718096', weight: 2, opacity: 0.5, dashArray: '3,5' }).addTo(map);
+
+// === CITY MARKERS ===
+ORDER.forEach((code, idx) => {
+  const city = CITIES[code];
+  const legIn = LEGS[idx];
+  const legOut = LEGS[idx + 1];
+  const ringColor = (legIn && legOut && legIn.transport === legOut.transport)
+    ? COLORS[legIn.transport]
+    : (legIn ? COLORS[legIn.transport] : COLORS[legOut.transport]);
+
+  const icon = L.divIcon({
+    html: `<div class="custom-marker" style="border-color:${ringColor}">${idx + 1}</div>`,
+    iconSize: [30, 30], iconAnchor: [15, 15], className: ''
+  });
+
+  // 停留时长计算：城市 idx，入城段为 LEGS[idx]，出城段为 LEGS[idx+1]
+  // 解析 arr 字段的 "(+Nd)" 标记以处理跨时区到达（如 BCN→SZX 实际到达次日）
+  const arriveLeg = LEGS[idx];
+  const departLeg = LEGS[idx + 1];
+  let arriveDateObj = arriveLeg?.date ? new Date(arriveLeg.date + ' 2026') : null;
+  const arrMatch = (arriveLeg?.arr || '').match(/\(\+(\d+)d\)/);
+  if (arrMatch && arriveDateObj) {
+    arriveDateObj.setDate(arriveDateObj.getDate() + parseInt(arrMatch[1]));
+  }
+  const departDateObj = departLeg?.date ? new Date(departLeg.date + ' 2026') : null;
+
+  let stayText = '';
+  let arriveLabel = '';
+  if (arriveDateObj) {
+    arriveLabel = `${arriveDateObj.getMonth() + 1}月${arriveDateObj.getDate()}日`;
+  }
+  if (arriveDateObj && departDateObj) {
+    const days = Math.round((departDateObj - arriveDateObj) / 86400000);
+    stayText = `<div class="meta"><b>停留：</b>${days} 天</div>`;
+  }
+
+  L.marker([city.lat, city.lon], { icon: icon, title: city.name }).addTo(map)
+    .bindPopup(
+      `<div class="popup-content">
+        <div class="city">${city.name} · 第 ${idx + 1} 站</div>
+        ${stayText}
+        <div class="meta"><b>抵达：</b>${arriveLabel || '—'}${arriveLeg?.arr && arriveLeg.arr !== 'TBD' ? ' · ' + arriveLeg.arr : ''}</div>
+        ${legOut && idx < ORDER.length - 1 ? `<div class="meta"><b>离开：</b>${legOut.date} → ${CITIES[ORDER[idx + 1]].name}${legOut.dep !== 'TBD' ? ' · ' + legOut.dep : ''}</div>` : ''}
+        ${attractionsHtml(code)}
+      </div>`
+    );
+});
+
+// === BARCELONA MARKER ===
+const bcnIcon = L.divIcon({
+  html: `<div class="custom-marker marker-bcn">✈</div>`,
+  iconSize: [30, 30], iconAnchor: [15, 15], className: ''
+});
+L.marker([CITIES.BCN.lat, CITIES.BCN.lon], { icon: bcnIcon }).addTo(map)
+  .bindPopup(`<div class="popup-content">
+    <div class="city">巴塞罗那 · BCN</div>
+    <div class="meta"><b>去程：</b>9月23日 · ZH866 · 12:20 CEST</div>
+    <div class="meta"><b>返程：</b>10月17日 · CA845 · 到达 08:15 CEST</div>
+  </div>`);
+
+// === AIRPORT MARKERS (smaller, dashed border) ===
+['PVG', 'TFU'].forEach(code => {
+  const city = CITIES[code];
+  const icon = L.divIcon({
+    html: `<div class="airport-marker"></div>`,
+    iconSize: [12, 12], iconAnchor: [6, 6], className: ''
+  });
+  L.marker([city.lat, city.lon], { icon: icon, title: code, interactive: false }).addTo(map);
+});
+
+// === SIDEBAR LEG CARDS ===
+const legList = document.getElementById('leg-list');
+LEGS.forEach((leg, i) => {
+  const card = document.createElement('div');
+  card.className = 'leg-card' + (i === 0 || i === 11 ? ' long-haul' : '');
+  card.style.borderLeftColor = COLORS[leg.transport];
+  const flightTag = leg.no !== '—' ? `<span style="background:${COLORS[leg.transport]}; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:700; margin-left:4px; font-family:monospace;">${leg.no}</span>` : '';
+  card.innerHTML = `
+    <div class="date" style="color:${COLORS[leg.transport]}">${dateToCn(leg.date)}${flightTag}</div>
+    <div class="route">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+    <div class="meta">${leg.dep} → ${leg.arr} · ${leg.dur}</div>
+    ${leg.note ? `<div class="note">${leg.note}</div>` : ''}
+    <div class="zoom-hint">点击跳转到地图 ↗</div>
+  `;
+  card.dataset.idx = i;
+  card.addEventListener('click', () => {
+    const fromCity = CITIES[leg.from];
+    const toCity = CITIES[leg.to];
+    if (!fromCity || !toCity) return;
+
+    // 高亮当前卡片、取消其他高亮
+    document.querySelectorAll('.leg-card.active').forEach(el => el.classList.remove('active'));
+    card.classList.add('active');
+
+    // 长航线：跨度 > 60° 视为洲际，不 fitBounds（会缩到全世界）→ 直接定位到目的地
+    const lonSpan = Math.abs(toCity.lon - fromCity.lon);
+    if (lonSpan > 60) {
+      map.setView([toCity.lat, toCity.lon], 6, { animate: true });
+    } else {
+      map.fitBounds(
+        [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
+        { padding: [80, 80], maxZoom: 9, animate: true }
+      );
+    }
+
+    // 定位后滚动侧边栏到底，保持可见
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  legList.appendChild(card);
+});
+</script>
+</body>
+</html>

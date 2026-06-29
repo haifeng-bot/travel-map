@@ -1,0 +1,21 @@
+# OS / 编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# 临时文件
+*.tmp
+*.bak
+*.log
+
+# Python（serve.py 用到的）
+__pycache__/
+*.pyc
+.venv/
+
+# Cloudflare 临时 tunnel（如果有谁在本地试 trycloudflare）
+.cloudflared/
+*.tunnel.json

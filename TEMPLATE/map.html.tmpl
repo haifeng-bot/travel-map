@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{TRIP_TITLE_CN}}</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #faf6ef; color: #1a202c; }
+  #map { position: absolute; inset: 0; background: #e8eef5; }
+
+  .sidebar {
+    position: absolute; left: 12px; top: 12px; width: 310px;
+    max-height: calc(100vh - 24px); overflow-y: auto;
+    background: rgba(255,255,255,0.97); border-radius: 10px;
+    padding: 14px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    z-index: 1000; font-size: 13px;
+  }
+  .sidebar h1 { font-size: 17px; margin: 0 0 4px; letter-spacing: 0.2px; }
+  .sidebar .subtitle { color: #718096; font-size: 11px; margin-bottom: 12px; }
+  .leg-card {
+    padding: 8px 10px; margin-bottom: 6px; border-radius: 6px;
+    border-left: 4px solid; background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  }
+  .leg-card:hover { transform: translateX(2px); box-shadow: 0 2px 6px rgba(0,0,0,0.10); background: #f7faff; }
+  .leg-card.active { background: #ebf8ff; box-shadow: 0 2px 6px rgba(43,108,176,0.18); }
+  .leg-card .date { font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
+  .leg-card .route { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .leg-card .meta { font-size: 10px; color: #4a5568; margin-top: 2px; font-family: monospace; }
+  .leg-card .note { font-size: 10px; color: #718096; margin-top: 2px; font-style: italic; }
+  .leg-card.long-haul { background: #f7faff; }
+  .leg-card .zoom-hint { font-size: 9px; color: #a0aec0; margin-top: 3px; opacity: 0; transition: opacity 0.12s; }
+  .leg-card:hover .zoom-hint { opacity: 1; }
+
+  .legend {
+    position: absolute; right: 12px; bottom: 12px;
+    background: rgba(255,255,255,0.97); padding: 10px 12px;
+    border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; font-size: 12px;
+  }
+  .legend .legend-title { font-weight: 700; font-size: 11px; margin-bottom: 6px; color: #4a5568; letter-spacing: 0.3px; }
+  .legend-item { display: flex; align-items: center; margin: 4px 0; }
+  .legend-line { width: 36px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  .scale-tip {
+    position: absolute; right: 12px; top: 12px;
+    background: rgba(255,255,255,0.97); padding: 8px 12px;
+    border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; font-size: 11px; color: #4a5568;
+  }
+  .scale-tip kbd {
+    background: #edf2f7; border: 1px solid #cbd5e0;
+    border-radius: 3px; padding: 1px 5px; font-family: monospace;
+    font-size: 10px;
+  }
+
+  .custom-marker {
+    background: #fff; border-radius: 50%;
+    border: 3px solid; width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+  }
+  .marker-origin {
+    background: #eef2ff; border-color: #667eea;
+    color: #2b6cb0; font-size: 14px;
+  }
+  .airport-marker {
+    background: #fff; border: 2px dashed #2b6cb0;
+    width: 12px; height: 12px; border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .popup-content { font-family: inherit; min-width: 220px; }
+  .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .popup-content .meta { font-size: 11px; color: #4a5568; margin-top: 3px; }
+  .popup-content .attractions {
+    margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0;
+  }
+  .popup-content .attractions-title {
+    font-size: 9px; color: #718096; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 700;
+  }
+  .popup-content .attractions ul {
+    margin: 0; padding: 0; list-style: none;
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .popup-content .attractions li {
+    display: inline-block; background: #edf2f7; color: #2d3748;
+    padding: 2px 7px; border-radius: 10px; font-size: 10px;
+  }
+  .popup-content .tag {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; color: #fff; margin-top: 4px;
+  }
+  .popup-content .flight-no {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    background: #2b6cb0; color: #fff; font-size: 10px; font-weight: 700;
+    margin-left: 6px; font-family: monospace;
+  }
+  .popup-content .time-row {
+    display: flex; gap: 12px; margin-top: 6px; font-size: 11px;
+    color: #1a202c; font-family: monospace;
+  }
+  .popup-content .time-row .lbl { color: #718096; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .leaflet-popup-content-wrapper { border-radius: 8px; }
+  .leaflet-popup-content { margin: 10px 14px; }
+  .leaflet-container { font: inherit; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="sidebar">
+  <h1>{{TRIP_TITLE_CN}}</h1>
+  <div class="subtitle">{{TRIP_DATES_CN}} · {{NUM_STOPS}} 站 · {{NUM_DAYS}} 天</div>
+  <div id="leg-list"></div>
+</div>
+
+<div class="legend">
+  <div class="legend-title">图例</div>
+  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>✈ 飞机</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#2f855a 0,#2f855a 7px,transparent 7px,transparent 11px)"></div>🚄 高铁</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#d69e2e 0,#d69e2e 3px,transparent 3px,transparent 6px)"></div>⛴ 轮渡</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,rgba(43,108,176,0.45) 0,rgba(43,108,176,0.45) 9px,transparent 9px,transparent 14px); border-radius:0;"></div>洲际航线弧</div>
+</div>
+
+<div class="scale-tip">
+  滚轮 / <kbd>+</kbd> <kbd>−</kbd> 缩放 · 拖动平移
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script>
+const CITIES = {{CITIES_JSON}};
+
+// Transport nodes: precise locations for airports, HSR stations, and ferry ports
+// type: "airport" | "station" | "port"
+const TRANSPORT_NODES = {{TRANSPORT_NODES_JSON}};
+
+// HSR actual route waypoints (not straight lines)
+const HSR_ROUTES = {{HSR_ROUTES_JSON}};
+
+function getLocCoords(leg, side) {
+  const key = side === 'from' ? leg.from_loc : leg.to_loc;
+  if (key && TRANSPORT_NODES[key]) return [TRANSPORT_NODES[key].lat, TRANSPORT_NODES[key].lon];
+  if (key && CITIES[key]) return [CITIES[key].lat, CITIES[key].lon];
+  const cityCode = leg[side];
+  return [CITIES[cityCode].lat, CITIES[cityCode].lon];
+}
+
+function getLocName(leg, side) {
+  const key = side === 'from' ? leg.from_loc : leg.to_loc;
+  if (key && TRANSPORT_NODES[key]) return TRANSPORT_NODES[key].name;
+  if (key && CITIES[key]) return CITIES[key].name;
+  return CITIES[leg[side]].name;
+}
+
+const LEGS = {{LEGS_JSON}};
+const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
+const TRANSPORT_LABEL = {"flight": "飞机", "train": "高铁", "ferry": "轮渡"};
+const SIDEBAR_WIDTH = 322;
+const MARKER_HALF = 18;
+const LEFT_PADDING = 450;
+const ORDER = {{ORDER_JSON}};
+const ATTRACTIONS = {{ATTRACTIONS_JSON}};
+
+// ARC_FROMA_TOB (international flight, pre-computed great circle)
+// 73 waypoints, generated from BCN(41.297, 2.083) to SZX(22.639, 113.811)
+const ARC_FROMA_TOB = {{ARC_OUTBOUND}};
+const ARC_FROMX_TOY = {{ARC_RETURN}};
+
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, worldCopyJump: true });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+const fitPoints = ORDER.map(c => [CITIES[c].lat, CITIES[c].lon]);
+fitPoints.push([CITIES.FROMA.lat, CITIES.FROMA.lon]);
+map.fitBounds(fitPoints, { padding: [80, 80] });
+
+function drawLongArc(points, color, leg, opacity = 0.45) {
+  const latlngs = points.map(p => [p[0], p[1]]);
+  return L.polyline(latlngs, {
+    color: color, weight: 4, opacity: opacity,
+    dashArray: '9, 12', lineCap: 'round'
+  }).addTo(map).bindPopup(
+    `<div class="popup-content">
+      <div class="city">${dateToCn(leg.date)} · 洲际航线</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+      <div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>
+      <div class="time-row">
+        <div><div class="lbl">出发</div>${leg.dep}</div>
+        <div><div class="lbl">到达</div>${leg.arr}</div>
+      </div>
+      <div class="meta">时长 ${leg.dur}${leg.note ? ' · ' + leg.note : ''}</div>
+    </div>`
+  );
+}
+
+drawLongArc(ARC_FROMA_TOB, COLORS.flight, LEGS[0], 0.5);
+drawLongArc(ARC_FROMX_TOY, COLORS.flight, LEGS[LEGS.length - 1], 0.5);
+
+function dateToCn(dateStr) {
+  const d = new Date(dateStr + ' 2026');
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+function attractionsHtml(code) {
+  const list = ATTRACTIONS[code];
+  if (!list || !list.length) return '';
+  return `<div class="attractions">
+      <div class="attractions-title">景点推荐</div>
+      <ul>${list.map(a => `<li>${a}</li>`).join('')}</ul>
+    </div>`;
+}
+
+for (let i = 0; i < ORDER.length - 1; i++) {
+  const fromCode = ORDER[i];
+  const toCode = ORDER[i + 1];
+  const leg = LEGS[i + 1];
+  const color = COLORS[leg.transport];
+  const dash = leg.transport === 'ferry' ? '5,8' : (leg.transport === 'train' ? '8,5' : null);
+
+  const fromCoords = getLocCoords(leg, 'from');
+  const toCoords = getLocCoords(leg, 'to');
+
+  const hsrKey = `${fromCode}→${toCode}`;
+  let polylinePoints;
+  if (leg.transport === 'train' && HSR_ROUTES[hsrKey]) {
+    polylinePoints = HSR_ROUTES[hsrKey];
+  } else {
+    polylinePoints = [fromCoords, toCoords];
+  }
+
+  const fromName = getLocName(leg, 'from');
+  const toName = getLocName(leg, 'to');
+
+  L.polyline(
+    polylinePoints,
+    { color: color, weight: 4.5, opacity: 0.9, dashArray: dash }
+  ).addTo(map).bindPopup(
+    `<div class="popup-content">
+      <div class="city">${dateToCn(leg.date)}</div>
+      <div class="meta" style="font-weight:600;font-size:13px;color:#1a202c">${CITIES[fromCode].name} → ${CITIES[toCode].name}</div>
+      <div class="meta" style="font-size:10px;color:#718096">${fromName} → ${toName}</div>
+      ${leg.no !== '—' ? `<div><span class="flight-no">${leg.no}</span> <span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>` : `<div><span class="tag" style="background:${color}">${TRANSPORT_LABEL[leg.transport]}</span></div>`}
+      <div class="time-row">
+        <div><div class="lbl">出发</div>${leg.dep}</div>
+        <div><div class="lbl">到达</div>${leg.arr}</div>
+      </div>
+      <div class="meta">时长 ${leg.dur}${leg.note ? ' · ' + leg.note : ''}</div>
+    </div>`
+  );
+}
+
+const transportNodeKeys = Object.keys(TRANSPORT_NODES);
+const NODE_COLOR = {airport: '#2b6cb0', station: '#2f855a', port: '#d69e2e'};
+const NODE_ICON = {airport: '✈', station: '🚄', port: '⛴'};
+transportNodeKeys.forEach(code => {
+  const node = TRANSPORT_NODES[code];
+  const icon = L.divIcon({
+    html: `<div class="airport-marker" style="border-color:${NODE_COLOR[node.type] || '#718096'}"></div>`,
+    iconSize: [12, 12], iconAnchor: [6, 6], className: ''
+  });
+  L.marker([node.lat, node.lon], { icon: icon, title: node.name })
+    .bindTooltip(node.name + ' ' + (NODE_ICON[node.type] || ''), {
+      direction: 'right', offset: [8, 0], opacity: 0.95
+    })
+    .addTo(map);
+});
+
+const cityToNodes = {{CITY_TO_NODES_JSON}};
+cityToNodes.forEach(([cityCode, nodeCode]) => {
+  const city = CITIES[cityCode];
+  const node = TRANSPORT_NODES[nodeCode];
+  if (!city || !node) return;
+  L.polyline(
+    [[city.lat, city.lon], [node.lat, node.lon]],
+    { color: '#718096', weight: 1.5, opacity: 0.4, dashArray: '2,4' }
+  ).addTo(map);
+});
+
+ORDER.forEach((code, idx) => {
+  const city = CITIES[code];
+  const legIn = LEGS[idx];
+  const legOut = LEGS[idx + 1];
+  const ringColor = (legIn && legOut && legIn.transport === legOut.transport)
+    ? COLORS[legIn.transport]
+    : (legIn ? COLORS[legIn.transport] : COLORS[legOut.transport]);
+
+  const icon = L.divIcon({
+    html: `<div class="custom-marker" style="border-color:${ringColor}">${idx + 1}</div>`,
+    iconSize: [30, 30], iconAnchor: [15, 15], className: ''
+  });
+
+  const arriveLeg = LEGS[idx];
+  const departLeg = LEGS[idx + 1];
+  let arriveDateObj = arriveLeg?.date ? new Date(arriveLeg.date + ' 2026') : null;
+  const arrMatch = (arriveLeg?.arr || '').match(/\(\+(\d+)d\)/);
+  if (arrMatch && arriveDateObj) {
+    arriveDateObj.setDate(arriveDateObj.getDate() + parseInt(arrMatch[1]));
+  }
+  const departDateObj = departLeg?.date ? new Date(departLeg.date + ' 2026') : null;
+
+  let stayText = '';
+  let arriveLabel = '';
+  if (arriveDateObj) {
+    arriveLabel = `${arriveDateObj.getMonth() + 1}月${arriveDateObj.getDate()}日`;
+  }
+  if (arriveDateObj && departDateObj) {
+    const days = Math.round((departDateObj - arriveDateObj) / 86400000);
+    stayText = `<div class="meta"><b>停留：</b>${days} 天</div>`;
+  }
+
+  L.marker([city.lat, city.lon], { icon: icon, title: city.name }).addTo(map)
+    .bindPopup(
+      `<div class="popup-content">
+        <div class="city">${city.name} · 第 ${idx + 1} 站</div>
+        ${stayText}
+        <div class="meta"><b>抵达：</b>${arriveLabel || '—'}${arriveLeg?.arr && arriveLeg.arr !== '待定' ? ' · ' + arriveLeg.arr : ''}</div>
+        ${legOut && idx < ORDER.length - 1 ? `<div class="meta"><b>离开：</b>${legOut.date} → ${CITIES[ORDER[idx + 1]].name}${legOut.dep !== '待定' ? ' · ' + legOut.dep : ''}</div>` : ''}
+        ${attractionsHtml(code)}
+      </div>`
+    );
+});
+
+const originCode = '{{ORIGIN_CODE}}';
+const originIcon = L.divIcon({
+  html: `<div class="custom-marker marker-origin">✈</div>`,
+  iconSize: [30, 30], iconAnchor: [15, 15], className: ''
+});
+L.marker([CITIES[originCode].lat, CITIES[originCode].lon], { icon: originIcon }).addTo(map)
+  .bindPopup(`<div class="popup-content">
+    <div class="city">${CITIES[originCode].name}</div>
+    <div class="meta">出发 / 返回</div>
+  </div>`);
+
+const legList = document.getElementById('leg-list');
+LEGS.forEach((leg, i) => {
+  const card = document.createElement('div');
+  card.className = 'leg-card' + (i === 0 || i === LEGS.length - 1 ? ' long-haul' : '');
+  card.style.borderLeftColor = COLORS[leg.transport];
+  const flightTag = leg.no !== '—' ? `<span style="background:${COLORS[leg.transport]}; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:700; margin-left:4px; font-family:monospace;">${leg.no}</span>` : '';
+  const fromName = getLocName(leg, 'from');
+  const toName = getLocName(leg, 'to');
+  const detailName = (fromName !== CITIES[leg.from].name || toName !== CITIES[leg.to].name)
+    ? `<div class="note">${fromName} → ${toName}</div>` : '';
+  card.innerHTML = `
+    <div class="date" style="color:${COLORS[leg.transport]}">${dateToCn(leg.date)}${flightTag}</div>
+    <div class="route">${CITIES[leg.from].name} → ${CITIES[leg.to].name}</div>
+    ${detailName}
+    <div class="meta">${leg.dep} → ${leg.arr} · ${leg.dur}</div>
+    ${leg.note ? `<div class="note">${leg.note}</div>` : ''}
+    <div class="zoom-hint">点击跳转到地图 ↗</div>
+  `;
+  card.dataset.idx = i;
+  card.addEventListener('click', () => {
+    const fromCoords = getLocCoords(leg, 'from');
+    const toCoords = getLocCoords(leg, 'to');
+    if (!fromCoords || !toCoords) return;
+    document.querySelectorAll('.leg-card.active').forEach(el => el.classList.remove('active'));
+    card.classList.add('active');
+    const lonSpan = Math.abs(toCoords[1] - fromCoords[1]);
+    if (lonSpan > 60) {
+      map.fitBounds([fromCoords, toCoords], {
+        paddingTopLeft: [LEFT_PADDING, 80],
+        paddingBottomRight: [80, 80],
+        maxZoom: 6, animate: true
+      });
+    } else {
+      map.fitBounds([fromCoords, toCoords], {
+        paddingTopLeft: [LEFT_PADDING, 80],
+        paddingBottomRight: [80, 80],
+        maxZoom: 9, animate: true
+      });
+    }
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  legList.appendChild(card);
+});
+</script>
+</body>
+</html>

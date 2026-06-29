@@ -357,11 +357,14 @@ LEGS.forEach((leg, i) => {
       map.setView(newCenter, 6, { animate: true });
     } else {
       // 国内段：用非对称 padding，右侧不受限，左侧避开侧边栏 + 留出 marker 空间
+      // 注意：Leaflet Point 是 [x, y]，x=水平，y=垂直
+      //   paddingTopLeft: [x, y] = [左 padding, 顶 padding]
+      //   paddingBottomRight: [x, y] = [右 padding, 底 padding]
       map.fitBounds(
         [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
         {
-          paddingTopLeft: [80, LEFT_PADDING],
-          paddingBottomRight: [80, 80],
+          paddingTopLeft: [LEFT_PADDING, 80],     // 600px 左, 80px 顶
+          paddingBottomRight: [80, 80],            // 80px 右, 80px 底
           maxZoom: 9, animate: true
         }
       );

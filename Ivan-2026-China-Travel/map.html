@@ -138,7 +138,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script>
-const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "澳门", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "香港", "lat": 22.282, "lon": 114.158}, "SHA": {"name": "上海", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.657, "lon": 104.066}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.557, "lon": 106.575}, "DYG": {"name": "张家界", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "西安", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "北京", "lat": 39.905, "lon": 116.398}};
+const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "澳门", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "香港", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "上海", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.657, "lon": 104.066}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.557, "lon": 106.575}, "DYG": {"name": "张家界", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "西安", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "北京", "lat": 39.905, "lon": 116.398}};
 
 // 交通节点：机场、火车站、轮渡码头的具体位置
 // type: "airport" | "station" | "port"
@@ -153,59 +153,60 @@ const TRANSPORT_NODES = {
   "HKG_AIR":  {name: "香港机场", lat: 22.308, lon: 113.918, type: "airport"},
   // 上海
   "PVG":  {name: "浦东机场", lat: 31.143, lon: 121.805, type: "airport"},
-  "SHA_HQ": {name: "上海虹桥站", lat: 31.194, lon: 121.319, type: "station"},
+  "SHA_HQ": {name: "上海虹桥站", lat: 31.196, lon: 121.316, type: "station"},
   // 芜湖
   "WHU_XY": {name: "芜宣机场", lat: 31.104, lon: 118.667, type: "airport"},
+  "WHU_STATION": {name: "芜湖站", lat: 31.348, lon: 118.392, type: "station"},
   // 成都
   "TFU":  {name: "天府机场", lat: 30.312, lon: 104.441, type: "airport"},
-  "CTU_EAST": {name: "成都东站", lat: 30.630, lon: 104.144, type: "station"},
+  "CTU_EAST": {name: "成都东站", lat: 30.631, lon: 104.139, type: "station"},
   // 重庆
-  "CKG_NORTH": {name: "重庆北站", lat: 29.610, lon: 106.563, type: "station"},
-  "CKG_EAST": {name: "重庆东站", lat: 29.476, lon: 106.654, type: "station"},
+  "CKG_NORTH": {name: "重庆北站", lat: 29.612, lon: 106.547, type: "station"},
+  "CKG_EAST": {name: "重庆东站", lat: 29.487, lon: 106.669, type: "station"},
   // 张家界
-  "DYG_WEST":  {name: "张家界西站", lat: 29.131, lon: 110.473, type: "station"},
+  "DYG_WEST":  {name: "张家界西站", lat: 29.171, lon: 110.457, type: "station"},
   "DYG_AIR":   {name: "张家界荷花机场", lat: 29.103, lon: 110.443, type: "airport"},
   // 西安
   "XIY_AIR":   {name: "西安咸阳机场", lat: 34.447, lon: 108.751, type: "airport"},
-  "XIY_NORTH": {name: "西安北站", lat: 34.379, lon: 108.937, type: "station"},
+  "XIY_NORTH": {name: "西安北站", lat: 34.378, lon: 108.934, type: "station"},
   // 北京
   "PEK_AIR":   {name: "首都机场", lat: 40.080, lon: 116.585, type: "airport"},
-  "PEK_WEST":  {name: "北京西站", lat: 39.895, lon: 116.323, type: "station"},
+  "PEK_WEST":  {name: "北京西站", lat: 39.894, lon: 116.316, type: "station"},
 };
 
 // HSR 实际路线 waypoint，用于绘制高铁的真实路径（不是直线）
 const HSR_ROUTES = {
   "SHA→WHU": [
-    [31.194, 121.319], // 上海虹桥
+    [31.196, 121.316], // 上海虹桥
     [31.30,  120.59],  // 苏州
     [31.57,  120.30],  // 无锡
     [31.78,  119.95],  // 常州
     [32.20,  119.43],  // 镇江
     [31.97,  118.79],  // 南京南
     [31.71,  118.55],  // 马鞍山东
-    [31.34,  118.38],  // 芜湖
+    [31.348, 118.392], // 芜湖站
   ],
   "CTU→CKG": [
-    [30.630, 104.144], // 成都东
+    [30.631, 104.139], // 成都东
     [30.13,  104.65],  // 资阳北
     [29.62,  105.06],  // 内江北
     [29.36,  105.93],  // 永川东
-    [29.610, 106.563], // 重庆北
+    [29.612, 106.547], // 重庆北
   ],
   "CKG→DYG": [
-    [29.476, 106.654], // 重庆东 (渝湘高铁 2025 通车)
+    [29.487, 106.669], // 重庆东 (渝湘高铁 2025 通车)
     [29.32,  107.76],  // 武隆南
     [29.30,  108.16],  // 彭水西
     [29.52,  108.97],  // 黔江
-    [29.131, 110.473], // 张家界西
+    [29.171, 110.457], // 张家界西
   ],
   "XIY→PEK": [
-    [34.379, 108.937], // 西安北
+    [34.378, 108.934], // 西安北
     [34.50,  110.10],  // 华山北
     [34.62,  112.42],  // 洛阳龙门
     [34.72,  113.78],  // 郑州东
     [38.05,  114.51],  // 石家庄
-    [39.895, 116.323], // 北京西
+    [39.894, 116.316], // 北京西
   ],
 };
 
@@ -231,7 +232,7 @@ function getNodeIconSvg(type) {
   return type === 'airport' ? '\u2708' : '\uD83D\uDE84'; // ✈ or 🚄
 }
 
-const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程 → 宝安", "to_loc": "SZX_AIR"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": "蛇口→外港", "from_loc": "SZX_PORT", "to_loc": "MFM_PORT"}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "外港→中环 同日", "from_loc": "MFM_PORT", "to_loc": "HKG_PORT"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG", "from_loc": "HKG_AIR", "to_loc": "PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h 50m", "note": "虹桥出发 直达", "from_loc": "SHA_HQ"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "芜宣→天府 TFU", "from_loc": "WHU_XY", "to_loc": "TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1h 20m", "note": "", "from_loc": "CTU_EAST", "to_loc": "CKG_NORTH"}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h", "note": "渝湘高铁", "from_loc": "CKG_EAST", "to_loc": "DYG_WEST"}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": "荷花→咸阳", "from_loc": "DYG_AIR", "to_loc": "XIY_AIR"}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": "", "from_loc": "XIY_NORTH", "to_loc": "PEK_WEST"}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程 首都机场", "from_loc": "PEK_AIR"}];
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程 → 宝安", "to_loc": "SZX_AIR"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": "蛇口→外港", "from_loc": "SZX_PORT", "to_loc": "MFM_PORT"}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "外港→中环 同日", "from_loc": "MFM_PORT", "to_loc": "HKG_PORT"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG", "from_loc": "HKG_AIR", "to_loc": "PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h 50m", "note": "虹桥→芜湖站 直达", "from_loc": "SHA_HQ", "to_loc": "WHU_STATION"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "芜宣→天府 TFU", "from_loc": "WHU_XY", "to_loc": "TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1h 20m", "note": "", "from_loc": "CTU_EAST", "to_loc": "CKG_NORTH"}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h", "note": "渝湘高铁", "from_loc": "CKG_EAST", "to_loc": "DYG_WEST"}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": "荷花→咸阳", "from_loc": "DYG_AIR", "to_loc": "XIY_AIR"}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": "", "from_loc": "XIY_NORTH", "to_loc": "PEK_WEST"}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程 首都机场", "from_loc": "PEK_AIR"}];
 
 // 注意：LEGS 顺序 = ORDER 映射 + LEGS[0] BCN→SZX + LEGS[10] PEK→BCN
 // 国内段索引: LEGS[1]~LEGS[9] 对应 ORDER[0]~ORDER[8]
@@ -455,6 +456,7 @@ const cityToNodes = [
   ["SHA", "SHA_HQ"],
   ["SHA", "PVG"],
   ["WHU", "WHU_XY"],
+  ["WHU", "WHU_STATION"],
   ["CTU", "CTU_EAST"],
   ["CTU", "TFU"],
   ["CKG", "CKG_EAST"],

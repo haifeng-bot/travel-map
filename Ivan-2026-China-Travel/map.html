@@ -118,7 +118,7 @@
 
 <div class="sidebar">
   <h1>中国旅行行程</h1>
-  <div class="subtitle">2026 年 9 月 23 日 – 10 月 17 日 · 11 站 · 25 天</div>
+  <div class="subtitle">2026 年 9 月 23 日 – 10 月 17 日 · 10 站 · 25 天</div>
   <div id="leg-list"></div>
 </div>
 
@@ -139,19 +139,22 @@
         crossorigin=""></script>
 <script>
 const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.639, "lon": 113.811}, "MFM": {"name": "澳门", "lat": 22.149, "lon": 113.592}, "HKG": {"name": "香港", "lat": 22.308, "lon": 113.915}, "SHA": {"name": "上海", "lat": 31.197, "lon": 121.336}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.034, "lon": 118.766}, "CTU": {"name": "成都", "lat": 30.578, "lon": 103.947}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.719, "lon": 106.642}, "DYG": {"name": "张家界", "lat": 29.103, "lon": 110.443}, "XIY": {"name": "西安", "lat": 34.447, "lon": 108.751}, "PEK": {"name": "北京", "lat": 40.08, "lon": 116.585}};
-const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "同日"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG"}, {"date": "Sep 30", "from": "SHA", "to": "HGH", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1h", "note": ""}, {"date": "Oct 02", "from": "HGH", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~2h", "note": ""}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "→ 天府 TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程"}];
+const LEGS = [{"date": "Sep 23", "from": "BCN", "to": "SZX", "transport": "flight", "no": "ZH866", "dep": "12:20 CEST", "arr": "07:10 CST (+1d)", "dur": "12h 50m", "note": "去程"}, {"date": "Sep 25", "from": "SZX", "to": "MFM", "transport": "ferry", "no": "—", "dep": "上午", "arr": "上午", "dur": "~1h", "note": ""}, {"date": "Sep 25", "from": "MFM", "to": "HKG", "transport": "ferry", "no": "—", "dep": "下午", "arr": "下午", "dur": "~1h", "note": "同日"}, {"date": "Sep 27", "from": "HKG", "to": "SHA", "transport": "flight", "no": "CX302", "dep": "21:05 HKT", "arr": "23:55 CST", "dur": "2h 50m", "note": "→ 浦东 PVG"}, {"date": "Sep 30", "from": "SHA", "to": "WHU", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~3h", "note": "直达 (跳过杭州)"}, {"date": "Oct 04", "from": "WHU", "to": "CTU", "transport": "flight", "no": "3U6950", "dep": "10:30 CST", "arr": "13:00 CST", "dur": "2h 30m", "note": "→ 天府 TFU"}, {"date": "Oct 06", "from": "CTU", "to": "CKG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~1.5h", "note": ""}, {"date": "Oct 08", "from": "CKG", "to": "DYG", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~5h", "note": ""}, {"date": "Oct 11", "from": "DYG", "to": "XIY", "transport": "flight", "no": "MU2432", "dep": "22:45 CST", "arr": "00:15 CST (+1d)", "dur": "1h 30m", "note": ""}, {"date": "Oct 13", "from": "XIY", "to": "PEK", "transport": "train", "no": "HSR", "dep": "待定", "arr": "待定", "dur": "~4.5h", "note": ""}, {"date": "Oct 17", "from": "PEK", "to": "BCN", "transport": "flight", "no": "CA845", "dep": "02:50 CST", "arr": "08:15 CEST", "dur": "11h 25m", "note": "返程"}];
 const COLORS = {"flight": "#2b6cb0", "train": "#2f855a", "ferry": "#d69e2e"};
 const TRANSPORT_LABEL = {"flight": "飞机", "train": "高铁", "ferry": "轮渡"};
 const TRANSPORT_ICON = {"flight": "\u2708", "train": "\u2263", "ferry": "\u2693"};
-const ORDER = ["SZX", "MFM", "HKG", "SHA", "HGH", "WHU", "CTU", "CKG", "DYG", "XIY", "PEK"];
+// 侧边栏宽度（CSS 中 sidebar 是 left:12px + width:310px，总占 322px）。
+// 地图 zoom 中心点需要右移这个距离以避免被侧边栏遮挡。
+const SIDEBAR_WIDTH = 322;
+const ORDER = ["SZX", "MFM", "HKG", "SHA", "WHU", "CTU", "CKG", "DYG", "XIY", "PEK"];
 // 景点推荐（可随时补充；停时间为 0 天的城市仍会列出以供下次参考）
 const ATTRACTIONS = {
   SZX: ["世界之窗", "欢乐谷", "东部华侨城", "锦绣中华民俗村"],
   MFM: ["大三巴牌坊", "妈阁庙", "威尼斯人", "议事亭前地"],
   HKG: ["维多利亚港", "太平山顶", "香港迪士尼", "海洋公园", "庙街夜市"],
   SHA: ["外滩", "东方明珠", "豫园", "田子坊", "上海博物馆"],
-  HGH: ["西湖", "灵隐寺", "雷峰塔", "龙井村"],
-  WHU: ["鸠兹广场", "镜湖公园", "奇瑞工业园"],
+  // HGH 暂不入图（本次行程跳过杭州）— 数据保留以备将来行程用
+  WHU: ["鸠兹广场", "镜湖公园", "奇瑞工业园", "中江塔", "赭山公园"],
   CTU: ["大熊猫繁育基地", "宽窄巷子", "武侯祠", "锦里"],
   CKG: ["洪崖洞", "磁器口古镇", "解放碑", "武隆天生三桥"],
   DYG: ["张家界国家森林公园", "天门山", "黄龙洞", "大峡谷玻璃桥"],
@@ -341,11 +344,22 @@ LEGS.forEach((leg, i) => {
     // 长航线：跨度 > 60° 视为洲际，不 fitBounds（会缩到全世界）→ 直接定位到目的地
     const lonSpan = Math.abs(toCity.lon - fromCity.lon);
     if (lonSpan > 60) {
-      map.setView([toCity.lat, toCity.lon], 6, { animate: true });
+      // 洲际：setView 到目的地，但把中心点右移以避免被侧边栏遮挡
+      const size = map.getSize();
+      const targetX = (SIDEBAR_WIDTH + size.x) / 2;
+      const targetY = size.y / 2;
+      const point = map.project([toCity.lat, toCity.lon], 6);
+      const newCenter = map.unproject([point.x + (targetX - point.x), point.y + (targetY - point.y)], 6);
+      map.setView(newCenter, 6, { animate: true });
     } else {
+      // 国内段：用非对称 padding，右侧不受限，左侧避开侧边栏
       map.fitBounds(
         [[fromCity.lat, fromCity.lon], [toCity.lat, toCity.lon]],
-        { padding: [80, 80], maxZoom: 9, animate: true }
+        {
+          paddingTopLeft: [80, SIDEBAR_WIDTH],
+          paddingBottomRight: [80, 80],
+          maxZoom: 9, animate: true
+        }
       );
     }
 

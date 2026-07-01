@@ -138,7 +138,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script>
-const CITIES = {"BCN": {"name": "Barcelona", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "Shenzhen", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "Macau", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "Hong Kong", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "Shanghai", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "Pudong (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "Hangzhou", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "Wuhu", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "Chengdu", "lat": 30.657, "lon": 104.066}, "TFU": {"name": "Tianfu (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "Chongqing", "lat": 29.557, "lon": 106.575}, "DYG": {"name": "Zhangjiajie", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "Xi'an", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "Beijing", "lat": 39.905, "lon": 116.398}};
+const CITIES = {"BCN": {"name": "Barcelona", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "Shenzhen", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "Macau", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "Hong Kong", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "Shanghai", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "Pudong (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "Hangzhou", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "Wuhu", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "Chengdu", "lat": 30.657, "lon": 104.066, "hotel": "诚友苑酒店（华西医院衣冠庙地铁站店）· Oct 4→Oct 6"}, "TFU": {"name": "Tianfu (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "Chongqing", "lat": 29.557, "lon": 106.575, "hotel": "TheMove江景酒店（重慶解放碑洪崖洞店）· Oct 6→Oct 8"}, "DYG": {"name": "Zhangjiajie", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "Xi'an", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "Beijing", "lat": 39.905, "lon": 116.398}};
 
 // Transport nodes: precise locations for airports, HSR stations, and ferry ports
 // type: "airport" | "station" | "port"
@@ -402,6 +402,7 @@ ORDER.forEach((code, idx) => {
       `<div class="popup-content">
         <div class="city">${city.name} · Stop ${idx + 1}</div>
         ${stayText}
+        ${city.hotel ? `<div class="meta"><b>Hotel: </b>${city.hotel}</div>` : ''}
         <div class="meta"><b>Arrive: </b>${arriveLabel || '—'}${arriveLeg?.arr && arriveLeg.arr !== 'TBD' ? ' · ' + arriveLeg.arr : ''}</div>
         ${legOut && idx < ORDER.length - 1 ? `<div class="meta"><b>Depart: </b>${legOut.date} →  ${CITIES[ORDER[idx + 1]].name}${legOut.dep !== 'TBD' ? ' · ' + legOut.dep : ''}</div>` : ''}
         ${attractionsHtml(code)}

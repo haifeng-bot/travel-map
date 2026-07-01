@@ -138,7 +138,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script>
-const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "澳门", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "香港", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "上海", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.657, "lon": 104.066}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.557, "lon": 106.575}, "DYG": {"name": "张家界", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "西安", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "北京", "lat": 39.905, "lon": 116.398}};
+const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "澳门", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "香港", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "上海", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.657, "lon": 104.066, "hotel": "诚友苑酒店（华西医院衣冠庙地铁站店）· 10/4→10/6"}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.557, "lon": 106.575, "hotel": "TheMove江景酒店（重慶解放碑洪崖洞店）· 10/6→10/8"}, "DYG": {"name": "张家界", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "西安", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "北京", "lat": 39.905, "lon": 116.398}};
 
 // 交通节点：机场、火车站、轮渡码头的具体位置
 // type: "airport" | "station" | "port"
@@ -405,6 +405,7 @@ ORDER.forEach((code, idx) => {
       `<div class="popup-content">
         <div class="city">${city.name} · 第 ${idx + 1} 站</div>
         ${stayText}
+        ${city.hotel ? `<div class="meta"><b>酒店：</b>${city.hotel}</div>` : ''}
         <div class="meta"><b>抵达：</b>${arriveLabel || '—'}${arriveLeg?.arr && arriveLeg.arr !== 'TBD' ? ' · ' + arriveLeg.arr : ''}</div>
         ${legOut && idx < ORDER.length - 1 ? `<div class="meta"><b>离开：</b>${legOut.date} → ${CITIES[ORDER[idx + 1]].name}${legOut.dep !== 'TBD' ? ' · ' + legOut.dep : ''}</div>` : ''}
         ${attractionsHtml(code)}

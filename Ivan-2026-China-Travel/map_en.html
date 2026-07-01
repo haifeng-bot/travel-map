@@ -74,6 +74,13 @@
     width: 12px; height: 12px; border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
+  .hotel-marker {
+    background: #fff; border: 2.5px solid #805ad5;
+    width: 20px; height: 20px; border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
 
   .popup-content { font-family: inherit; min-width: 220px; }
   .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
@@ -128,6 +135,7 @@
   <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#2f855a 0,#2f855a 7px,transparent 7px,transparent 11px)"></div>🚄 High-speed Rail</div>
   <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#d69e2e 0,#d69e2e 3px,transparent 3px,transparent 6px)"></div>⛴ Ferry</div>
   <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,rgba(43,108,176,0.45) 0,rgba(43,108,176,0.45) 9px,transparent 9px,transparent 14px); border-radius:0;"></div>Long-haul arc</div>
+  <div class="legend-item"><div style="background:#fff;border:2.5px solid #805ad5;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:9px;">🛏</div>Hotel</div>
 </div>
 
 <div class="scale-tip">
@@ -139,6 +147,30 @@
         crossorigin=""></script>
 <script>
 const CITIES = {"BCN": {"name": "Barcelona", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "Shenzhen", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "Macau", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "Hong Kong", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "Shanghai", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "Pudong (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "Hangzhou", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "Wuhu", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "Chengdu", "lat": 30.657, "lon": 104.066, "hotel": "诚友苑酒店（华西医院衣冠庙地铁站店）· Oct 4→Oct 6"}, "TFU": {"name": "Tianfu (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "Chongqing", "lat": 29.557, "lon": 106.575, "hotel": "TheMove江景酒店（重慶解放碑洪崖洞店）· Oct 6→Oct 8"}, "DYG": {"name": "Zhangjiajie", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "Xi'an", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "Beijing", "lat": 39.905, "lon": 116.398}};
+
+
+// Lodging (hotels): only overnight cities, excludes Macau MFM. One lodging point per city
+// Coordinate sources:
+//   CTU (Chengdu): Amap Yiguanmiao Metro Exit C — 30.634816, 104.052799
+//   CKG (Chongqing): Amap Zourong Rd 50 Peninsula Intl Business Bldg 20F — 29.556315, 106.579646
+const HOTELS = {
+  "CTU": {
+    name: "Chengyouyuan Hotel",
+    branch: "West China Hospital Yiguanmiao Metro branch",
+    address: "16 Ximianqiao St, Wuhou District, Chengdu",
+    checkin: "Oct 4",
+    checkout: "Oct 6",
+    lat: 30.634816, lon: 104.052799
+  },
+  "CKG": {
+    name: "TheMove River View Hotel",
+    branch: "Chongqing Jiefangbei Hongyadong branch",
+    address: "20F Peninsula Intl Business Bldg, 50 Zourong Rd, Yuzhong District, Chongqing",
+    checkin: "Oct 6",
+    checkout: "Oct 8",
+    lat: 29.556315, lon: 106.579646
+  }
+};
 
 // Transport nodes: precise locations for airports, HSR stations, and ferry ports
 // type: "airport" | "station" | "port"
@@ -438,6 +470,31 @@ transportNodeKeys.forEach(code => {
     })
     .addTo(map);
 });
+
+// Hotel markers: lodging points (purple bed icon), only for cities in HOTELS
+// No connecting lines (avoid visual clutter); spatial proximity + legend differentiate.
+Object.entries(HOTELS).forEach(([code, hotel]) => {
+  const icon = L.divIcon({
+    html: '<div class="hotel-marker">🛏</div>',
+    iconSize: [20, 20], iconAnchor: [10, 10], className: ''
+  });
+  L.marker([hotel.lat, hotel.lon], { icon: icon, title: hotel.name })
+    .bindPopup(
+      `
+        <div class="popup-content">
+          <div class="city">${hotel.name} · ${hotel.branch}</div>
+          <div class="meta"><b>Address:</b> ${hotel.address}</div>
+          <div class="meta"><b>Check-in:</b> ${hotel.checkin} · <b>Check-out:</b> ${hotel.checkout}</div>
+        </div>
+      `
+    )
+    .bindTooltip(hotel.name + ' · ' + hotel.branch, {
+      direction: 'right', offset: [10, 0], opacity: 0.95
+    })
+    .addTo(map);
+});
+
+
 
 // Grey dashed connector lines: city center ↔ all linked transport nodes
 // Each city has 1–2 connector lines (airport, ferry port, HSR station)

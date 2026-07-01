@@ -74,6 +74,13 @@
     width: 12px; height: 12px; border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
+  .hotel-marker {
+    background: #fff; border: 2.5px solid #805ad5;
+    width: 20px; height: 20px; border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
 
   .popup-content { font-family: inherit; min-width: 220px; }
   .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
@@ -128,6 +135,7 @@
   <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#2f855a 0,#2f855a 7px,transparent 7px,transparent 11px)"></div>🚄 高铁</div>
   <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#d69e2e 0,#d69e2e 3px,transparent 3px,transparent 6px)"></div>⛴ 轮渡</div>
   <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,rgba(43,108,176,0.45) 0,rgba(43,108,176,0.45) 9px,transparent 9px,transparent 14px); border-radius:0;"></div>洲际航线弧</div>
+  <div class="legend-item"><div style="background:#fff;border:2.5px solid #805ad5;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:9px;">🛏</div>酒店</div>
 </div>
 
 <div class="scale-tip">
@@ -139,6 +147,29 @@
         crossorigin=""></script>
 <script>
 const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "澳门", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "香港", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "上海", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.657, "lon": 104.066, "hotel": "诚友苑酒店（华西医院衣冠庙地铁站店）· 10/4→10/6"}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.557, "lon": 106.575, "hotel": "TheMove江景酒店（重慶解放碑洪崖洞店）· 10/6→10/8"}, "DYG": {"name": "张家界", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "西安", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "北京", "lat": 39.905, "lon": 116.398}};
+
+// 居住点（酒店）：仅过夜城市，不含澳门 MFM。每座城市一个“居住点”作为未来 4 点框架之一。
+// 坐标来源：
+//   CTU（成都）：Amap 衣冠庙地铁站 C 口（酒店就在站旁）— 30.634816, 104.052799
+//   CKG（重庆）：Amap 邹容路 50 号半岛国际商务大厦 20 楼 POI 坐标 — 29.556315, 106.579646
+const HOTELS = {
+  "CTU": {
+    name: "诚友苑酒店",
+    branch: "华西医院衣冠庙地铁站店",
+    address: "成都·武侯区洗面桥街 16 号",
+    checkin: "10 月 4 日",
+    checkout: "10 月 6 日",
+    lat: 30.634816, lon: 104.052799
+  },
+  "CKG": {
+    name: "TheMove 江景酒店",
+    branch: "重慶解放碑洪崖洞店",
+    address: "重庆·渝中区邹容路 50 号半岛国际商务大厦 20 楼",
+    checkin: "10 月 6 日",
+    checkout: "10 月 8 日",
+    lat: 29.556315, lon: 106.579646
+  }
+};
 
 // 交通节点：机场、火车站、轮渡码头的具体位置
 // type: "airport" | "station" | "port"
@@ -443,6 +474,30 @@ transportNodeKeys.forEach(code => {
     })
     .addTo(map);
 });
+
+// Hotel markers: 居住点（紫色 bed 图标），仅在 HOTELS 中存在的城市渲染
+// 不画到机场/高铁站的连接线（避免 visual clutter）；靠空间近邻与图例区分。
+Object.entries(HOTELS).forEach(([code, hotel]) => {
+  const icon = L.divIcon({
+    html: '<div class="hotel-marker">🛏</div>',
+    iconSize: [20, 20], iconAnchor: [10, 10], className: ''
+  });
+  L.marker([hotel.lat, hotel.lon], { icon: icon, title: hotel.name })
+    .bindPopup(
+      `
+        <div class="popup-content">
+          <div class="city">${hotel.name} · ${hotel.branch}</div>
+          <div class="meta"><b>地址：</b>${hotel.address}</div>
+          <div class="meta"><b>入住：</b>${hotel.checkin} · <b>退房：</b>${hotel.checkout}</div>
+        </div>
+      `
+    )
+    .bindTooltip(hotel.name + ' · ' + hotel.branch, {
+      direction: 'right', offset: [10, 0], opacity: 0.95
+    })
+    .addTo(map);
+});
+
 
 // 额外在虹桥站加一个 label（用 Leaflet 的 DivIcon 显示图标文字）
 // 其他节点不显式显示 label（靠线段的端点暗示）

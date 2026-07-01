@@ -148,28 +148,69 @@
 <script>
 const CITIES = {"BCN": {"name": "巴塞罗那", "lat": 41.297, "lon": 2.083}, "SZX": {"name": "深圳", "lat": 22.541, "lon": 114.059}, "MFM": {"name": "澳门", "lat": 22.197, "lon": 113.543}, "HKG": {"name": "香港", "lat": 22.298, "lon": 114.172}, "SHA": {"name": "上海", "lat": 31.234, "lon": 121.475}, "PVG": {"name": "浦东机场 (PVG)", "lat": 31.143, "lon": 121.805}, "HGH": {"name": "杭州", "lat": 30.23, "lon": 120.435}, "WHU": {"name": "芜湖", "lat": 31.337, "lon": 118.377}, "CTU": {"name": "成都", "lat": 30.657, "lon": 104.066, "hotel": "诚友苑酒店（华西医院衣冠庙地铁站店）· 10/4→10/6"}, "TFU": {"name": "天府机场 (TFU)", "lat": 30.312, "lon": 104.441}, "CKG": {"name": "重庆", "lat": 29.557, "lon": 106.575, "hotel": "TheMove江景酒店（重慶解放碑洪崖洞店）· 10/6→10/8"}, "DYG": {"name": "张家界", "lat": 29.117, "lon": 110.479}, "XIY": {"name": "西安", "lat": 34.262, "lon": 108.943}, "PEK": {"name": "北京", "lat": 39.905, "lon": 116.398}};
 
-// 居住点（酒店）：仅过夜城市，不含澳门 MFM。每座城市一个“居住点”作为未来 4 点框架之一。
-// 坐标来源：
-//   CTU（成都）：Amap 衣冠庙地铁站 C 口（酒店就在站旁）— 30.634816, 104.052799
-//   CKG（重庆）：Amap 邹容路 50 号半岛国际商务大厦 20 楼 POI 坐标 — 29.556315, 106.579646
+// 居住点（酒店）：仅过夜城市，不含澳门 MFM。每座城市一个"居住点"作为未来 4 点框架之一。
+// 坐标说明（重要）：中国民用地图（高德、腾讯、百度）使用 GCJ-02 / BD-09（火星坐标），
+// 与 WGS-84 存在 300-700m 系统性偏移。Leaflet + OSM tiles 是 WGS-84，所以 GCJ-02 坐标在 OSM 上会偏。
+//
+// 本文件中的 HOTELS / TRANSPORT_NODES / CITIES 已经统一为 WGS-84：
+// - CTU 成都酒店: OSM Nominatim, 洗面桥街/洗面桥东二街交叉口南侧 — 30.6390, 104.0528
+// - CKG 重庆酒店: OSM Nominatim, 邹容路/新华路 半岛国际隔壁 — 29.5592, 106.5759
+// 
+// 未来提供 Amap / Baidu / Tencent 坐标时，使用下面的 gcj02ToWgs84 函数转换一次。
+function gcj02ToWgs84(lon, lat) {
+  const a = 6378240.0, ee = 0.00669342162296594323;
+  function transformLat(x, y) {
+    let r = -100 + 2*x + 3*y + 0.2*y*y + 0.1*x*x + 0.2*x*y;
+    r += (20*Math.sin(6*x*Math.PI) + 20*Math.sin(2*x*Math.PI)) * 2/3;
+    r += (20*Math.sin(y*Math.PI) + 40*Math.sin(y/3*Math.PI)) * 2/3;
+    r += (160*Math.sin(y/12*Math.PI) + 320*Math.sin(y*Math.PI/30)) * 2/3;
+    return r;
+  }
+  function transformLon(x, y) {
+    let r = 300 + x + 2*y + 0.1*x*x + 0.1*x*y + 0.1*Math.sqrt(Math.abs(x));
+    r += (20*Math.sin(6*x*Math.PI) + 20*Math.sin(2*x*Math.PI)) * 2/3;
+    r += (20*Math.sin(x*Math.PI) + 40*Math.sin(x/3*Math.PI)) * 2/3;
+    r += (150*Math.sin(x/12*Math.PI) + 300*Math.sin(x/30*Math.PI)) * 2/3;
+    return r;
+  }
+  let wgsLon = lon, wgsLat = lat;
+  for (let i = 0; i < 5; i++) {
+    const radLat = wgsLat / 180 * Math.PI;
+    let magic = Math.sin(radLat);
+    magic = 1 - ee * magic * magic;
+    const sqrtMagic = Math.sqrt(magic);
+    let dLat = transformLat(wgsLon - 105, wgsLat - 35);
+    let dLon = transformLon(wgsLon - 105, wgsLat - 35);
+    dLat = (dLat * 180) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+    dLon = (dLon * 180) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+    const gcjLat = wgsLat + dLat;
+    const gcjLon = wgsLon + dLon;
+    wgsLon += lon - gcjLon;
+    wgsLat += lat - gcjLat;
+    if (Math.abs(lon - gcjLon) < 1e-7 && Math.abs(lat - gcjLat) < 1e-7) break;
+  }
+  return { lon: wgsLon, lat: wgsLat };
+}
+
 const HOTELS = {
   "CTU": {
     name: "诚友苑酒店",
     branch: "华西医院衣冠庙地铁站店",
-    address: "成都·武侯区洗面桥街 16 号",
+    address: "成都·武侯区洗面桥街 16 号（洗面桥街/洗面桥东二街交叉口南侧）",
     checkin: "10 月 4 日",
     checkout: "10 月 6 日",
-    lat: 30.634816, lon: 104.052799
+    lat: 30.6390, lon: 104.0528
   },
   "CKG": {
     name: "TheMove 江景酒店",
     branch: "重慶解放碑洪崖洞店",
-    address: "重庆·渝中区邹容路 50 号半岛国际商务大厦 20 楼",
+    address: "重庆·渝中区邹容路/新华路交叉口 半岛国际商务大厦隔壁",
     checkin: "10 月 6 日",
     checkout: "10 月 8 日",
-    lat: 29.556315, lon: 106.579646
+    lat: 29.5592, lon: 106.5759
   }
 };
+
 
 // 交通节点：机场、火车站、轮渡码头的具体位置
 // type: "airport" | "station" | "port"

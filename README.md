@@ -180,6 +180,35 @@ const ATTRACTIONS = {
 
 key 是 `CITIES` 里的城市代码。停 0 天的城市也建议列，方便以后参考。
 
+### 6. `HOTELS` —— 居住点（酒店）
+
+```js
+const HOTELS = {
+  "CTU": {
+    name: "诚友苑酒店",
+    branch: "华西医院衣冠庙地铁站店",
+    address: "成都·武侯区洗面桥街 16 号（洗面桥街/洗面桥东二街交叉口南侧）",
+    checkin: "10 月 4 日",
+    checkout: "10 月 6 日",
+    lat: 30.6390, lon: 104.0528  // ⚠️ WGS-84，不是 Amap GCJ-02
+  },
+  // ...
+};
+
+// 辅助函数：GCJ-02（火星坐标）→ WGS-84。仅供 fallback 使用，详见坑 #6
+function gcj02ToWgs84(lon, lat) { /* 标准逆变换递归 5 次 */ }
+```
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| key | ✅ | 与 `CITIES` key 对应。**只过夜城市**才有；澳门 MFM 等不过夜的不加 |
+| name + branch | ✅ | 酒店主名 + 分店名（方便到店 Check-in 时核对） |
+| address | ✅ | 完整地址，**尽量包含精确定位信息**（楼牌号、交叉口、与某地标相邻）——纯酒店名搜索 GCJ-02 偏移会偏几百米 |
+| checkin / checkout | ✅ | 用与 `LEGS` 一致的日期格式（英文版 `Oct 6` / 中文版 `10 月 6 日`） |
+| lat / lon | ✅ | **必须是 WGS-84**。**绝不直接用 Amap/Baidu/Tencent 坐标**——详细处理见坑 #6 |
+
+渲染：紫色 🛏 图标（`.hotel-marker` CSS），区别于城市 marker（编号白底）和交通节点（虚线小圆）。点击显示 popup（酒店名 + 入住/退房）。
+
 ---
 
 ## 从零搭新项目 (Step-by-step)
@@ -304,6 +333,53 @@ MFM: ["大三巴", "妈阁庙", ...],
 2. `from_loc`/`to_loc` 用 `_PORT` 节点
 3. **不要**加 HSR_ROUTES key（轮渡直接画直线）
 4. 在 `TRANSPORT_NODES` 加两个 `_PORT` 节点
+
+### G. 加一个酒店 (例如过夜城市新确认了酒店)
+
+⚠️ **警告：先读坑 #6（坐标系统问题）**——这是用 Amap 数据最常 hit 的坑。
+
+简要流程：
+
+```
+1. 拿酒店信息（用户给）：城市代码 + 酒店名 + 分店 + 入住/退房 + **精确定位地址**
+   → 地址一定要包含楼牌号或交叉口或与地标相邻（如"邹容路/新华路交叉口半岛国际隔壁"）
+
+2. 用以下方式之一获取 WGS-84 坐标：
+
+   a) OSM Nominatim 查询精确定位地址 → JSON 里有 lat / lon
+   b) Wikipedia 查知名地标
+   c) 已有 Amap 坐标 → 通过内置 gcj02ToWgs84() 转（仅 fallback，**不能解决 POI ≠ 实际位置**）
+
+3. 验证（任意一种或多种）：
+   - 算法转换 vs OSM 估算应 < 50m 差异（POI 偏移例外，看语义是否对）
+   - 提交给用户检查：用户是实际住客，最权威
+   - 跟同城市其他点比较（如交通节点）确认无系统性偏移
+
+4. 加到 HOTELS（注意中英两版同步）：
+```
+
+```js
+const HOTELS = {
+  "XXX": {
+    name: "...",
+    branch: "...",
+    address: "...",  // 含楼牌号 / 交叉口 / 与某地标相邻
+    checkin: "...",
+    checkout: "...",
+    lat: ..., lon: ...  // WGS-84，且小数点后 4 位
+  }
+};
+```
+
+```
+5. 跑 ./validate.sh 验证 JS 语法
+6. commit + push
+7. CF Pages 自动部署（约 1-2 分钟）
+```
+
+**额外提醒**：
+- 私人/小众酒店 → OSM 多半查不到 → 直接问用户精确地址比搜 Amap 准
+- 高德给"地铁站 C 口"坐标 ≠ 酒店门口——这种细节决定 marker 偏几百米
 
 ---
 
@@ -444,16 +520,49 @@ open Ivan-2026-China-Travel/map.html
 
 **规则**：`CITIES[code].lat/lon` 必须是**城市市中心地标**（天安门、钟楼、解放碑），不是机场。机场/高铁站放在 `TRANSPORT_NODES` 里。
 
-### ❌ 6. 用高德/百度地图坐标不是真实 GPS 坐标
+### ❌ 6. 中国 POI 坐标不能直接 plot（中国坐标系统性问题，必须用 WGS-84）
 
-国内地图用 **GCJ-02（火星坐标）** 坐标系，跟国际通用的 **WGS-84** 差几百米到几公里。如果用高德坐标，地图 marker 会偏移。
+**这是测试过的真实坑**（2026-07-01 加成都/重庆酒店时 hit 过，hotel marker 偏了 ~400m 才被发现）。
 
-**正确做法**：用 **Wikipedia 官方坐标**（WGS-84），URL 格式：
-```
-https://geohack.toolforge.org/geohack.php?language=zh&pagename=<站名>&params=DD_MM_SS_N_DDD_MM_SS_E_type:railwaystation
-```
+**问题**：中国民用地图使用 **GCJ-02（火星坐标）**，跟国际通用 **WGS-84** 有 **300-700m 系统性偏移**：
+- 高德 / 腾讯 / 谷歌中国 → 都用 GCJ-02
+- 百度 → 在 GCJ-02 上叠了额外加密（BD-09，偏移更大）
+- OSM / Google Maps 国际版 / GPS → 都是 WGS-84
 
-Wikipedia 中文版的铁路车站条目顶部都有精确坐标。
+**Leaflet + OSM tiles 是 WGS-84**。把 Amap 给的 GCJ-02 坐标直接 plot 上去 → marker 偏几百米。
+
+**实际踩坑数据**（2026-07-01 验证）：
+- 成都酒店 Amap GCJ-02 → 算法转 WGS-84 → 落在 衣冠庙地铁站，酒店实际在 400m 偏北的交叉口 → **用 OSM 派生更准**
+- 重庆酒店 Amap GCJ-02 → 算法转 WGS-84 → OSM 估算 → 几乎完全吻合（误差 < 10m）
+
+**正解（三种来源，按优先级）**：
+
+1. **OSM Nominatim（首选，2026-07 起的推荐）**：
+   ```
+   https://nominatim.openstreetmap.org/search?q=<街道地址>&format=jsonv2
+   ```
+   返回的 lat/lon 是 WGS-84，直接可用。
+   适用于：街道地址、交叉口、知名 POI、酒店（大城市有覆盖）。
+
+2. **Wikipedia 官方坐标（早期项目采用）**：
+   中文版铁路车站、机场、知名地标有精确坐标：
+   ```
+   https://geohack.toolforge.org/geohack.php?language=zh&pagename=<站名>&params=DD_MM_SS_N_DDD_MM_SS_E_type:railwaystation
+   ```
+
+3. **Amap 坐标 + `gcj02ToWgs84()` 转换（fallback）**：
+   - 本项目 JS 里**已内置** `gcj02ToWgs84(lon, lat)` 函数（标准逆变换，递归 5 次）
+   - 算法精度通常 < 5m，但**前提是 Amap POI 与实际位置一致**
+   - **不能解决"POI ≠ 实际位置"的语义错位**（如酒店门口 ≠ 地铁站）
+   - 因此**仅在 1/2 都查不到时**用
+
+**铁律**：
+- ❌ **永远不 commit 原始 Amap / Baidu / Tencent 坐标**
+- ✅ 任何新坐标必须先在 JS 顶部注释里说明来源（OSM Nominatim / Wikipedia / Amap+转换）
+- ✅ 精度至少小数点后 3 位（~100m），目标 4 位（~10m）。**拒绝整数经纬度**
+- ✅ `HOTELS` / `CITIES` 条目的 `address` 字段**包含精确定位信息**（楼牌号/交叉口/与某地标相邻），未来坐标纠错有 anchor
+
+**进一步阅读**：查看 `HOTELS` 数据结构（数据模型 §6）和"加一个酒店"workflow（场景 G）。
 
 ### ❌ 7. OSM 瓦片在中文版显示中文，英文用户看不懂
 

@@ -188,9 +188,8 @@
 <div class="scale-tip">
   <b style="display:block;margin-bottom:4px;color:#1a202c;letter-spacing:0.3px">使用提示</b>
   悬停航线 → 详情提示<br>
-  点击航线 → 聚焦 + 高亮<br>
+  点击航线或城市 → 飞行 + 聚焦 + 高亮<br>
   点击空白 → 复原<br>
-  点击左侧城市 → 飞行 + 聚焦<br>
   滚轮 / <kbd>+</kbd> <kbd>−</kbd> 缩放
 </div>
 
@@ -340,16 +339,21 @@ ROUTES.forEach(r => {
     }
   });
 
-  // Click — 聚焦本航线 / 如果已聚焦则取消 (与侧栏点击行为完全一致)
+  // Click — 与侧栏点击完全一致: 飞行 + 聚焦 + 高亮 (无黑框)
   r.hit.on('click', (e) => {
     L.DomEvent.stopPropagation(e); // 阻止冒泡到 map.click 触发取消选中
     if (selected === r) {
       deselectAll();
-    } else {
-      selectRoute(r);
+      r.hit.closeTooltip();
+      return;
     }
+    selectRoute(r);
+    // 1. 飞到目的地 (与侧栏点击统一)
+    map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+    // 2. 关闭悬停 tooltip (避免点击后仍悬浮的"黑框")
+    r.hit.closeTooltip();
   });
-  // 注意: 点击航线不开 popup (避免黑框)，详细见悬停 tooltip / 侧栏卡
+  // 注意: 点击航线不开 popup, 详细看悬停 tooltip / 侧栏卡
 });
 
 // 点击空白处（除 hub 与航线外）取消选中
@@ -410,14 +414,17 @@ function buildTierList(tier, containerId) {
       <div class="note">${r.freq}</div>
     `;
     card.addEventListener('click', () => {
-      // 1. 聚焦本航线（高亮 + 其他变暗）—— 与地图点击行为一致
+      // 与地图点击一致: 飞行 + 聚焦 + 高亮 (无黑框)
       if (selected === r) {
         deselectAll();
+        r.hit.closeTooltip();
         return;
       }
       selectRoute(r);
-      // 2. 飞到目的地
+      // 飞到目的地
       map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+      // 关闭可能存在的悬停 tooltip (避免黑框)
+      r.hit.closeTooltip();
     });
     container.appendChild(card);
   });

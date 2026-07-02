@@ -188,9 +188,8 @@
 <div class="scale-tip">
   <b style="display:block;margin-bottom:4px;color:#1a202c;letter-spacing:0.3px">Tips</b>
   Hover route → tooltip<br>
-  Click route → focus + highlight<br>
+  Click route or city → fly + focus + highlight<br>
   Click blank → reset<br>
-  Click sidebar city → fly + focus<br>
   Scroll / <kbd>+</kbd> <kbd>−</kbd> to zoom
 </div>
 
@@ -340,16 +339,21 @@ ROUTES.forEach(r => {
     }
   });
 
-  // Click — focus this route (same as sidebar click; click again to deselect)
+  // Click — same as sidebar: fly + focus + highlight (no black frame)
   r.hit.on('click', (e) => {
     L.DomEvent.stopPropagation(e); // prevent bubbling to map.click which would deselect
     if (selected === r) {
       deselectAll();
-    } else {
-      selectRoute(r);
+      r.hit.closeTooltip();
+      return;
     }
+    selectRoute(r);
+    // 1. Fly to destination (unified with sidebar click)
+    map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+    // 2. Close hover tooltip (avoids lingering "black frame" after click)
+    r.hit.closeTooltip();
   });
-  // Note: route click does NOT open popup (no black frame); see hover tooltip / sidebar card for details
+  // Note: route click does NOT open popup, see hover tooltip / sidebar card for details
 });
 
 // click on empty area (besides hub and routes) deselects
@@ -410,11 +414,13 @@ function buildTierList(tier, containerId) {
       <div class="note">${r.freq}</div>
     `;
     card.addEventListener('click', () => {
-      // 1. Focus this route (highlight + dim others) — same as map click
-      if (selected === r) { deselectAll(); return; }
+      // Same as map click: fly + focus + highlight (no black frame)
+      if (selected === r) { deselectAll(); r.hit.closeTooltip(); return; }
       selectRoute(r);
-      // 2. Fly to destination
+      // Fly to destination
       map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+      // Close hover tooltip (avoids lingering "black frame")
+      r.hit.closeTooltip();
     });
     container.appendChild(card);
   });

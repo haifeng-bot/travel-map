@@ -63,15 +63,20 @@ travel-map/                                ← GitHub: haifeng-bot/travel-map
 │   ├── map.html.tmpl                      ← 骨架 map.html（替换占位符即可用）
 │   ├── map_en.html.tmpl                   ← 骨架英文版
 │   └── README.md                          ← 模板使用说明
-└── Ivan-2026-China-Travel/                ← 子项目 1：中国行 (2026-09 ~ 2026-10)
-    ├── map.html                           ← 中文版 (~540 行)
-    ├── map_en.html                        ← 英文版 (~530 行)
-    └── preview.png                        ← 缩略图
+├── Ivan-2026-China-Travel/                ← 子项目 1：中国行 (2026-09 ~ 2026-10) — 时间顺序旅行地图
+│   ├── map.html                           ← 中文版 (~540 行)
+│   ├── map_en.html                        ← 英文版 (~530 行)
+│   └── preview.png                        ← 缩略图
+└── Haifeng-2026-Wuhu-Departure/           ← 子项目 2：芜宣机场航线辐射图 (2026-07) — 静态辐射图
+    ├── map.html
+    ├── map_en.html
+    ├── README.md
+    └── preview.png
 ```
 
 未来扩展：
 ```
-└── Ivan-2027-Japan-Travel/                ← 子项目 2：日本行
+└── Ivan-2027-Japan-Travel/                ← 子项目 3：日本行（时间顺序旅行）
     ├── map.html
     ├── map_en.html
     └── preview.png
@@ -81,7 +86,13 @@ travel-map/                                ← GitHub: haifeng-bot/travel-map
 
 ## 数据模型 (核心)
 
-整个项目是数据驱动的——所有要展示的内容都来自 5 个常量结构。理解了这 5 个结构，剩下就是改数据。
+> **两种项目形态**：
+> - **A. 时间顺序旅行地图** (如 `Ivan-2026-China-Travel`) — 5 个常量结构，**严格依赖** `LEGS`/`ORDER`
+> - **B. Hub-and-spoke 静态辐射图** (如 `Haifeng-2026-Wuhu-Departure`) — 不同于 A，使用 `HUB` + `ROUTES` + `TIER_INFO`，**不依赖** `LEGS`/`ORDER`
+> 
+> 下面 1-5 节描述的是**A 模式**的所有项目；B 模式的结构在**该子项目自己的 README**里。
+
+下面 5 节以 **A 模式**为准。看完了再进项目看 B 模式。
 
 ### 1. `CITIES` —— 城市基础信息
 
@@ -665,9 +676,10 @@ A: 当前没实现。可以加：在 city marker click handler 里 `legList.chil
 
 ## 📂 子项目状态
 
-| 子项目 | CF Pages 项目 | URL | 状态 |
-|--------|-------------|-----|------|
-| [Ivan-2026-China-Travel](./Ivan-2026-China-Travel/) | `travel-map-1qa` | <https://travel-map-1qa.pages.dev/map> / [/map_en](https://travel-map-1qa.pages.dev/map_en) | ✅ 已上线 |
+| 子项目 | 类型 | CF Pages 项目 | URL | 状态 |
+|--------|------|--------------|-----|------|
+| [Ivan-2026-China-Travel](./Ivan-2026-China-Travel/) | 🧳 时间顺序旅行（10 段 LEGS） | `travel-map-1qa` | <https://travel-map-1qa.pages.dev/map> / [/map_en](https://travel-map-1qa.pages.dev/map_en) | ✅ 已上线 |
+| [Haifeng-2026-Wuhu-Departure](./Haifeng-2026-Wuhu-Departure/) | ✈️ Hub-and-spoke 航线辐射图（22 城） | 待创建 | 待部署 | 🆕 本地版本 |
 
 > ⚠️ **CF Pages 项目名全局唯一**，后缀是 CF 分配的，不是手填。
 

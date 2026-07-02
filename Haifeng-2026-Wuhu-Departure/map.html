@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>芜宣机场 直飞航线图 — 国内 22 城</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #faf6ef; color: #1a202c; }
+  #map { position: absolute; inset: 0; background: #e8eef5; }
+
+  .sidebar {
+    position: absolute; left: 12px; top: 12px; width: 310px;
+    max-height: calc(100vh - 24px); overflow-y: auto;
+    background: rgba(255,255,255,0.97); border-radius: 10px;
+    padding: 14px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    z-index: 1000; font-size: 13px;
+  }
+  .sidebar h1 { font-size: 16px; margin: 0 0 4px; letter-spacing: 0.2px; }
+  .sidebar .subtitle { color: #718096; font-size: 11px; margin-bottom: 12px; line-height: 1.5; }
+  .sidebar h2 {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    color: #4a5568; text-transform: uppercase; margin: 14px 0 6px;
+    padding-bottom: 4px; border-bottom: 1px solid #e2e8f0;
+  }
+  .route-card {
+    padding: 6px 10px; margin-bottom: 5px; border-radius: 6px;
+    border-left: 4px solid; background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  }
+  .route-card:hover { transform: translateX(2px); box-shadow: 0 2px 6px rgba(0,0,0,0.10); background: #f7faff; }
+  .route-card .city { font-weight: 600; font-size: 13px; }
+  .route-card .meta { font-size: 10px; color: #4a5568; margin-top: 2px; font-family: monospace; }
+  .route-card .note { font-size: 10px; color: #718096; margin-top: 2px; font-style: italic; }
+
+  .hub-badge {
+    display: inline-block; background: #2b6cb0; color: #fff;
+    padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700;
+    margin-right: 6px; font-family: monospace; letter-spacing: 0.3px;
+  }
+
+  .legend {
+    position: absolute; right: 12px; bottom: 12px;
+    background: rgba(255,255,255,0.97); padding: 10px 12px;
+    border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; font-size: 12px;
+  }
+  .legend .legend-title { font-weight: 700; font-size: 11px; margin-bottom: 6px; color: #4a5568; letter-spacing: 0.3px; }
+  .legend-item { display: flex; align-items: center; margin: 4px 0; }
+  .legend-line { width: 36px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-marker {
+    width: 12px; height: 12px; border-radius: 50%; border: 2px dashed #2b6cb0;
+    margin-right: 8px; flex-shrink: 0;
+  }
+  .legend-marker.hub {
+    background: #2b6cb0; border: 2px solid #2b6cb0;
+    width: 14px; height: 14px;
+  }
+  .legend-tag {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    background: #edf2f7; color: #2d3748; font-size: 10px; margin: 6px 4px 0 0;
+  }
+
+  .scale-tip {
+    position: absolute; right: 12px; top: 12px;
+    background: rgba(255,255,255,0.97); padding: 8px 12px;
+    border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; font-size: 11px; color: #4a5568;
+    max-width: 230px; line-height: 1.5;
+  }
+  .scale-tip kbd {
+    background: #edf2f7; border: 1px solid #cbd5e0;
+    border-radius: 3px; padding: 1px 5px; font-family: monospace;
+    font-size: 10px;
+  }
+
+  .hub-marker {
+    background: #2b6cb0; border-radius: 50%;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px; font-weight: 700;
+    box-shadow: 0 3px 8px rgba(43, 108, 176, 0.45);
+    border: 3px solid #fff;
+  }
+  .hub-marker::after {
+    content: ''; position: absolute; inset: -8px;
+    border: 2px solid rgba(43, 108, 176, 0.35);
+    border-radius: 50%; animation: pulse 2.5s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  .dest-marker {
+    background: #fff; border: 2px dashed #2b6cb0;
+    width: 12px; height: 12px; border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .dest-marker.tier1 { border-color: #2b6cb0; border-style: solid; width: 14px; height: 14px; background: #ebf8ff; }
+  .dest-marker.tier2 { border-color: #5a8ece; }
+  .dest-marker.tier3 { border-color: #a0aec0; }
+
+  .popup-content { font-family: inherit; min-width: 240px; }
+  .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .popup-content .airport-tag {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    background: #2b6cb0; color: #fff; font-size: 10px; font-weight: 700;
+    margin-right: 4px; font-family: monospace;
+  }
+  .popup-content .tier-tag {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; color: #fff;
+  }
+  .popup-content .meta { font-size: 11px; color: #4a5568; margin-top: 4px; }
+  .popup-content .meta-row {
+    display: flex; gap: 14px; margin-top: 6px; font-size: 11px;
+    color: #1a202c; font-family: monospace;
+  }
+  .popup-content .meta-row .lbl { color: #718096; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .popup-content hr { border: none; border-top: 1px dashed #e2e8f0; margin: 8px 0; }
+  .popup-content .source {
+    font-size: 9px; color: #a0aec0; margin-top: 6px;
+    font-style: italic; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
+  .leaflet-popup-content-wrapper { border-radius: 8px; }
+  .leaflet-popup-content { margin: 10px 14px; }
+  .leaflet-container { font: inherit; }
+
+  /* Polyline visual style transitions handled in JS via mouseover/out */
+  .leaflet-container .leaflet-interactive { cursor: pointer; }
+
+  .data-source {
+    font-size: 10px; color: #718096; margin-top: 12px; padding-top: 8px;
+    border-top: 1px solid #e2e8f0; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="sidebar">
+  <h1>🛫 芜宣机场 直飞航线图</h1>
+  <div class="subtitle">
+    <span class="hub-badge">WHU_XY</span>芜湖宣州机场<br>
+    22 个直飞国内目的地 · 数据截至 2026-07-02
+  </div>
+
+  <h2>📶 第一梯队 · 每日多班 (10 城)</h2>
+  <div id="tier1-list"></div>
+
+  <h2>🔁 第二梯队 · 周 3-7 班 (8 城)</h2>
+  <div id="tier2-list"></div>
+
+  <h2>🌤 第三梯队 · 季节性 / 淡季 (4 城)</h2>
+  <div id="tier3-list"></div>
+
+  <div class="data-source">
+    <b>数据来源：</b><br>
+    • 2025-2026 冬春航季公告（芜湖市政府 · 2025-10）<br>
+    • 2025 夏秋季航季公告（2025-03）<br>
+    • FlightConnections 直飞数据（2026-06-03 更新）<br>
+    <br>
+    <b>说明：</b>航线随航季调整，<b>订票前查芜宣机场官网</b>或航旅纵横确认。
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-title">图例</div>
+  <div class="legend-item"><div class="legend-marker hub"></div>枢纽机场</div>
+  <div class="legend-item"><div class="legend-marker"></div>目的地机场</div>
+  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>第一梯队 (每日)</div>
+  <div class="legend-item"><div class="legend-line" style="background:#5a8ece"></div>第二梯队 (周 3-7)</div>
+  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#a0aec0 0,#a0aec0 4px,transparent 4px,transparent 8px)"></div>第三梯队 (季节性)</div>
+</div>
+
+<div class="scale-tip">
+  鼠标悬停航线 → 航班详情<br>
+  点击航线 → 完整弹出框<br>
+  点击左侧城市 → 地图跳转<br>
+  滚轮 / <kbd>+</kbd> <kbd>−</kbd> 缩放
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script>
+// 枢纽机场 - 芜宣机场 (WHA / WUH_XY)
+// 坐标: 与 Ivan-2026-China-Travel 项目保持一致 (31.104, 118.667)
+const HUB = {
+  code: "WHU_XY",
+  iata: "WHA",
+  name: "芜湖宣州机场 (芜宣机场)",
+  city: "芜湖市湾沚区",
+  lat: 31.104, lon: 118.667,
+  opened: "2021-04-30",
+  grade: "4C 民用支线"
+};
+
+// 直飞航线列表
+// tier 1 = 每日多班、主力航线
+// tier 2 = 每周 3-7 班、次主力或季节性加密
+// tier 3 = 季节性、淡季、稀疏
+const ROUTES = [
+  // === 第一梯队：每日或近每日 ===
+  { tier: 1, code: "PEK",  city: "北京 (首都)",    airport: "首都国际机场",     lat: 40.080, lon: 116.585, airline: "HU 海南航空",            freq: "每周 246 + 暑期加密", duration: "2h 10m", source: "冬春 25-26" },
+  { tier: 1, code: "CAN",  city: "广州",          airport: "白云国际机场",     lat: 23.392, lon: 113.299, airline: "CZ 南航",                freq: "每日",                 duration: "2h 20m", source: "FC 2026-06" },
+  { tier: 1, code: "SZX",  city: "深圳",          airport: "宝安国际机场",     lat: 22.639, lon: 113.811, airline: "ZH 深圳航空",            freq: "每日 / 季节性 6-10 月",duration: "2h 20m", source: "夏秋 25" },
+  { tier: 1, code: "TFU",  city: "成都 (天府)",    airport: "天府国际机场",     lat: 30.312, lon: 104.441, airline: "3U 川航",                freq: "每日",                 duration: "2h 30m", source: "Ivan 实飞 10/4" },
+  { tier: 1, code: "CKG",  city: "重庆",          airport: "江北国际机场",     lat: 29.719, lon: 106.642, airline: "3U 川航 + CZ 重庆航空",freq: "每日 + 周 1357",         duration: "2h 20m", source: "冬春 25-26" },
+  { tier: 1, code: "XIY",  city: "西安",          airport: "咸阳国际机场",     lat: 34.447, lon: 108.751, airline: "—",                     freq: "每日",                 duration: "2h",      source: "夏秋 25" },
+  { tier: 1, code: "KMG",  city: "昆明",          airport: "长水国际机场",     lat: 25.108, lon: 102.929, airline: "—",                     freq: "每日",                 duration: "3h",      source: "夏秋 25" },
+  { tier: 1, code: "HAK",  city: "海口",          airport: "美兰国际机场",     lat: 19.935, lon: 110.459, airline: "GT 桂林航空",            freq: "季节性",               duration: "2h 50m", source: "FC 2026-06 · 最长航线" },
+  { tier: 1, code: "ZUH",  city: "珠海",          airport: "金湾国际机场",     lat: 22.006, lon: 113.371, airline: "GJ 浙江长龙",            freq: "每日",                 duration: "2h 15m", source: "冬春 25-26" },
+  { tier: 1, code: "HRB",  city: "哈尔滨",        airport: "太平国际机场",     lat: 45.623, lon: 126.250, airline: "GJ 浙江长龙",            freq: "每日",                 duration: "3h",      source: "冬春 25-26" },
+
+  // === 第二梯队：周 3-7 班，部分经停 / 季节性 ===
+  { tier: 2, code: "DLC",  city: "大连",          airport: "周水子国际机场",   lat: 38.965, lon: 121.539, airline: "GT 桂林航空",            freq: "周 1357",              duration: "2h 05m", source: "冬春 25-26 · 经桂林" },
+  { tier: 2, code: "KWL",  city: "桂林",          airport: "两江国际机场",     lat: 25.218, lon: 110.039, airline: "GT 桂林航空",            freq: "周 1357",              duration: "2h 15m", source: "冬春 25-26 · 经大连" },
+  { tier: 2, code: "FUO",  city: "佛山",          airport: "沙堤机场",         lat: 23.083, lon: 113.070, airline: "KN 中联航",              freq: "每日 (经大兴)",         duration: "2h 20m", source: "冬春 25-26" },
+  { tier: 2, code: "TYN",  city: "太原",          airport: "武宿国际机场",     lat: 37.747, lon: 112.628, airline: "HU 海南航空",            freq: "周 246",               duration: "2h 15m", source: "冬春 25-26 · 经泉州" },
+  { tier: 2, code: "JJN",  city: "泉州",          airport: "晋江国际机场",     lat: 24.797, lon: 118.674, airline: "HU 海南航空",            freq: "周 246",               duration: "1h 35m", source: "冬春 25-26 · 经太原" },
+  { tier: 2, code: "HSN",  city: "舟山",          airport: "普陀山机场",       lat: 29.930, lon: 122.363, airline: "G5 华夏航空",            freq: "周 1357",              duration: "1h 15m", source: "冬春 25-26" },
+  { tier: 2, code: "KWE",  city: "贵阳",          airport: "龙洞堡国际机场",   lat: 26.538, lon: 106.801, airline: "GT 桂林航空",            freq: "季节性 6-10 月",       duration: "2h 20m", source: "FC 2026-06" },
+  { tier: 2, code: "CSX",  city: "长沙",          airport: "黄花国际机场",     lat: 28.193, lon: 113.221, airline: "GT 桂林航空",            freq: "季节性 6-10 月",       duration: "1h 35m", source: "FC 2026-06" },
+
+  // === 第三梯队：稀疏 / 暑期加密 ===
+  { tier: 3, code: "XMN",  city: "厦门",          airport: "高崎国际机场",     lat: 24.544, lon: 118.127, airline: "—",                     freq: "历史通航",             duration: "1h 50m", source: "2025 夏秋季" },
+  { tier: 3, code: "SYX",  city: "三亚",          airport: "凤凰国际机场",     lat: 18.303, lon: 109.412, airline: "—",                     freq: "季节性 (冬季避寒)",     duration: "3h",      source: "夏秋 25" },
+  { tier: 3, code: "CTU",  city: "成都 (双流)",    airport: "双流国际机场",     lat: 30.578, lon: 103.947, airline: "—",                     freq: "暑期加密",             duration: "2h 30m", source: "夏秋 25 公告" },
+  { tier: 3, code: "CGQ",  city: "长春",          airport: "龙嘉国际机场",     lat: 43.996, lon: 125.685, airline: "—",                     freq: "历史通航",             duration: "2h 50m", source: "夏秋 25" }
+];
+
+const TIER_INFO = {
+  1: { label: "Tier 1 · 主力", color: "#2b6cb0", weight: 3.5, opacity: 0.85, dash: null, tag: "#2b6cb0" },
+  2: { label: "Tier 2 · 次主力", color: "#5a8ece", weight: 2.8, opacity: 0.75, dash: null, tag: "#5a8ece" },
+  3: { label: "Tier 3 · 季节性", color: "#a0aec0", weight: 2,   opacity: 0.65, dash: "5, 7", tag: "#a0aec0" }
+};
+
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, worldCopyJump: true });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · 航线数据来源: FlightConnections / 芜湖市政府公告'
+}).addTo(map);
+
+// 计算 fit bounds: 覆盖枢纽 + 所有目的地
+const allPoints = [[HUB.lat, HUB.lon]].concat(ROUTES.map(r => [r.lat, r.lon]));
+const bounds = L.latLngBounds(allPoints);
+map.fitBounds(bounds, { padding: [80, 80] });
+
+// === 渲染辐射航线 ===
+// 技巧: 每条航线画两条 polyline
+//   1. 可见线 (细) — 视觉显示
+//   2. 命中区 (透明,粗) — 让鼠标更容易 hover/click
+ROUTES.forEach(r => {
+  const tier = TIER_INFO[r.tier];
+  const latlngs = [[HUB.lat, HUB.lon], [r.lat, r.lon]];
+
+  // 可见线
+  const polyline = L.polyline(latlngs, {
+    color: tier.color, weight: tier.weight, opacity: tier.opacity, dashArray: tier.dash
+  }).addTo(map);
+
+  // 透明 hit zone (更粗 + 透明，便于 hover/click 命中)
+  const hit = L.polyline(latlngs, {
+    color: 'transparent', weight: 14, opacity: 0, interactive: true, pointerEvents: 'stroke'
+  }).addTo(map);
+
+  // Hover 弹出轻量 tooltip — 绑在 hit zone 上
+  hit.bindTooltip(
+    `<div style="font-family:inherit">
+      <b style="font-size:13px">${HUB.iata} → ${r.code} · ${r.city}</b><br>
+      <span style="font-size:11px;color:#4a5568">${r.airline}</span><br>
+      <span style="font-size:11px;color:#4a5568">${r.freq} · ${r.duration}</span><br>
+      <span style="font-size:9px;color:#a0aec0;text-transform:uppercase;letter-spacing:0.3px">${tier.label} · 点击查看详情</span>
+    </div>`,
+    { sticky: true, direction: 'auto', opacity: 0.95, className: 'route-tooltip' }
+  );
+
+  // hover 高亮：同步可见线的样式变化
+  hit.on('mouseover', () => {
+    polyline.setStyle({ weight: tier.weight + 3, opacity: 1 });
+  });
+  hit.on('mouseout', () => {
+    polyline.setStyle({ weight: tier.weight, opacity: tier.opacity });
+  });
+
+  // Click 完整 popup — 绑在 hit zone 上
+  hit.bindPopup(
+    `<div class="popup-content">
+      <div class="city">${HUB.iata} → ${r.code}</div>
+      <div class="city" style="font-size:13px;color:#4a5568">${r.city} · ${r.airport}</div>
+      <div style="margin-top:6px">
+        <span class="airport-tag">${HUB.iata}</span>
+        <span class="tier-tag" style="background:${tier.tag}">${tier.label}</span>
+      </div>
+      <hr>
+      <div class="meta-row">
+        <div><div class="lbl">航司</div>${r.airline}</div>
+        <div><div class="lbl">时长</div>${r.duration}</div>
+      </div>
+      <div class="meta"><b>班次：</b>${r.freq}</div>
+      <div class="meta">${r.code === "ZUH" || r.code === "HRB" ? "⚠️ 同一航班经停，第三段目的地" :
+                          r.code === "DLC" || r.code === "KWL" ? "⚠️ 同一航班经停" :
+                          r.code === "TYN" || r.code === "JJN" ? "⚠️ 同一航班经停，第三段目的地" :
+                          r.code === "HAK" ? "🛬 单段最长航线 (1,487 km)" :
+                          r.code === "SZX" || r.code === "KWE" || r.code === "CSX" ? "🌞 季节性航线 (6-10 月)" : ""}</div>
+      <div class="source">${r.source}</div>
+    </div>`,
+    { maxWidth: 320, autoPan: true }
+  );
+});
+
+// === 渲染目的城市标记（小型带 tier 颜色） ===
+ROUTES.forEach(r => {
+  const tier = TIER_INFO[r.tier];
+  const icon = L.divIcon({
+    html: `<div class="dest-marker tier${r.tier}" style="border-color:${tier.color}"></div>`,
+    iconSize: [12 + (r.tier === 1 ? 2 : 0), 12 + (r.tier === 1 ? 2 : 0)],
+    iconAnchor: [(12 + (r.tier === 1 ? 2 : 0))/2, (12 + (r.tier === 1 ? 2 : 0))/2],
+    className: ''
+  });
+  L.marker([r.lat, r.lon], { icon: icon, title: `${r.city} ${r.code}` })
+    .bindTooltip(`${r.city} ${r.code} · ${r.freq}`, {
+      direction: 'top', offset: [0, -8], opacity: 0.9, className: 'city-tooltip'
+    })
+    .addTo(map);
+});
+
+// === 渲染枢纽机场（大型、带脉冲） ===
+const hubIcon = L.divIcon({
+  html: `<div class="hub-marker">✈</div>`,
+  iconSize: [36, 36], iconAnchor: [18, 18], className: ''
+});
+L.marker([HUB.lat, HUB.lon], { icon: hubIcon, title: HUB.name, zIndexOffset: 1000 }).addTo(map)
+  .bindPopup(
+    `<div class="popup-content">
+      <div class="city">✈ ${HUB.name}</div>
+      <div class="meta">${HUB.city} · ${HUB.opened} 通航</div>
+      <div class="meta">${HUB.grade}</div>
+      <hr>
+      <div class="meta"><b>出发：</b>${HUB.iata} · <b>抵达城市数：</b>${ROUTES.length} 个 (按已确认航线)</div>
+      <div class="meta"><b>第一梯队：</b>${ROUTES.filter(r => r.tier === 1).length} 城 · 每日或近每日</div>
+      <div class="meta"><b>第二梯队：</b>${ROUTES.filter(r => r.tier === 2).length} 城 · 周 3-7 班</div>
+      <div class="meta"><b>第三梯队：</b>${ROUTES.filter(r => r.tier === 3).length} 城 · 季节性</div>
+      <div class="source">湾沚距离机场约 25-30 km · 自驾 25 min</div>
+    </div>`,
+    { maxWidth: 320, autoPan: true }
+  );
+
+// === 渲染左侧侧栏列表（按 tier 分组） ===
+function buildTierList(tier, containerId) {
+  const container = document.getElementById(containerId);
+  ROUTES.filter(r => r.tier === tier).forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'route-card';
+    card.style.borderLeftColor = TIER_INFO[r.tier].color;
+    card.innerHTML = `
+      <div class="city">${r.city} <span style="font-family:monospace;color:#718096;font-size:11px">${r.code}</span></div>
+      <div class="meta">${r.airline} · ${r.duration}</div>
+      <div class="note">${r.freq}</div>
+    `;
+    card.addEventListener('click', () => {
+      // fly to destination
+      map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+      // open popup after fly
+      setTimeout(() => {
+        // find the polyline marker (the city marker above) and open its tooltip
+        // Simpler: just pan there and visually highlight
+      }, 600);
+    });
+    container.appendChild(card);
+  });
+}
+buildTierList(1, 'tier1-list');
+buildTierList(2, 'tier2-list');
+buildTierList(3, 'tier3-list');
+</script>
+</body>
+</html>

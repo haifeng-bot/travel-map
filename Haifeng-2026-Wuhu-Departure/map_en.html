@@ -33,12 +33,17 @@
     cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
   }
   .route-card:hover { transform: translateX(2px); box-shadow: 0 2px 6px rgba(0,0,0,0.10); background: #f7faff; }
+  .route-card.selected { box-shadow: 0 3px 10px rgba(0,0,0,0.20); border-left-width: 6px; }
+  .route-card.selected::after {
+    content: '●'; position: absolute; right: 6px; top: 6px;
+    font-size: 11px; color: #c0392b;
+  }
   .route-card .city { font-weight: 600; font-size: 13px; }
   .route-card .meta { font-size: 10px; color: #4a5568; margin-top: 2px; font-family: monospace; }
   .route-card .note { font-size: 10px; color: #718096; margin-top: 2px; font-style: italic; }
 
   .hub-badge {
-    display: inline-block; background: #2b6cb0; color: #fff;
+    display: inline-block; background: #c0392b; color: #fff;
     padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700;
     margin-right: 6px; font-family: monospace; letter-spacing: 0.3px;
   }
@@ -52,13 +57,18 @@
   .legend .legend-title { font-weight: 700; font-size: 11px; margin-bottom: 6px; color: #4a5568; letter-spacing: 0.3px; }
   .legend-item { display: flex; align-items: center; margin: 4px 0; }
   .legend-line { width: 36px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-line.dashed { background-image: linear-gradient(to right, currentColor 50%, transparent 50%); background-size: 5px 3px; background-repeat: repeat-x; }
   .legend-marker {
-    width: 12px; height: 12px; border-radius: 50%; border: 2px dashed #2b6cb0;
+    width: 12px; height: 12px; border-radius: 50%; border: 2px dashed #16a085;
     margin-right: 8px; flex-shrink: 0;
   }
   .legend-marker.hub {
-    background: #2b6cb0; border: 2px solid #2b6cb0;
+    background: #c0392b; border: 2px solid #c0392b;
     width: 14px; height: 14px;
+  }
+  .legend-tag {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    background: #edf2f7; color: #2d3748; font-size: 10px; margin: 6px 4px 0 0;
   }
 
   .scale-tip {
@@ -75,16 +85,16 @@
   }
 
   .hub-marker {
-    background: #2b6cb0; border-radius: 50%;
+    background: #c0392b; border-radius: 50%;
     width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 18px; font-weight: 700;
-    box-shadow: 0 3px 8px rgba(43, 108, 176, 0.45);
+    box-shadow: 0 3px 8px rgba(192, 57, 43, 0.5);
     border: 3px solid #fff;
   }
   .hub-marker::after {
     content: ''; position: absolute; inset: -8px;
-    border: 2px solid rgba(43, 108, 176, 0.35);
+    border: 2px solid rgba(192, 57, 43, 0.35);
     border-radius: 50%; animation: pulse 2.5s ease-out infinite;
   }
   @keyframes pulse {
@@ -93,19 +103,19 @@
   }
 
   .dest-marker {
-    background: #fff; border: 2px dashed #2b6cb0;
+    background: #fff; border: 2px dashed #c0392b;
     width: 12px; height: 12px; border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
-  .dest-marker.tier1 { border-color: #2b6cb0; border-style: solid; width: 14px; height: 14px; background: #ebf8ff; }
-  .dest-marker.tier2 { border-color: #5a8ece; }
-  .dest-marker.tier3 { border-color: #a0aec0; }
+  .dest-marker.tier1 { border-color: #c0392b; border-style: solid; width: 14px; height: 14px; background: #fdecea; }
+  .dest-marker.tier2 { border-color: #e67e22; border-style: solid; }
+  .dest-marker.tier3 { border-color: #16a085; }
 
   .popup-content { font-family: inherit; min-width: 240px; }
   .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
   .popup-content .airport-tag {
     display: inline-block; padding: 2px 6px; border-radius: 3px;
-    background: #2b6cb0; color: #fff; font-size: 10px; font-weight: 700;
+    background: #c0392b; color: #fff; font-size: 10px; font-weight: 700;
     margin-right: 4px; font-family: monospace;
   }
   .popup-content .tier-tag {
@@ -113,6 +123,11 @@
     font-size: 10px; font-weight: 700; color: #fff;
   }
   .popup-content .meta { font-size: 11px; color: #4a5568; margin-top: 4px; }
+  .popup-content .meta-row {
+    display: flex; gap: 14px; margin-top: 6px; font-size: 11px;
+    color: #1a202c; font-family: monospace;
+  }
+  .popup-content .meta-row .lbl { color: #718096; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
   .popup-content hr { border: none; border-top: 1px dashed #e2e8f0; margin: 8px 0; }
   .popup-content .source {
     font-size: 9px; color: #a0aec0; margin-top: 6px;
@@ -123,6 +138,7 @@
   .leaflet-popup-content { margin: 10px 14px; }
   .leaflet-container { font: inherit; }
 
+  /* Polyline visual style transitions handled in JS via mouseover/out */
   .leaflet-container .leaflet-interactive { cursor: pointer; }
 
   .data-source {
@@ -135,28 +151,28 @@
 <div id="map"></div>
 
 <div class="sidebar">
-  <h1>🛫 Wuhu Xuanzhou Airport Routes</h1>
+  <h1>🛫 Wuhu Xuanzhou Airport · Direct Routes</h1>
   <div class="subtitle">
-    <span class="hub-badge">WHU_XY</span>Wuhu Xuanzhou Airport<br>
-    22 direct domestic destinations · Data as of 2026-07-02
+    <span class="hub-badge">WHU_XY</span> Wuhu Xuanzhou Airport<br>
+    22 domestic direct destinations · updated 2026-07-02
   </div>
 
-  <h2>📶 Tier 1 · Daily or near-daily (10 cities)</h2>
+  <h2>📶 Tier 1 · Main (10 cities)</h2>
   <div id="tier1-list"></div>
 
-  <h2>🔁 Tier 2 · 3-7 flights/week (8 cities)</h2>
+  <h2>🔁 Tier 2 · Secondary (8 cities)</h2>
   <div id="tier2-list"></div>
 
-  <h2>🌤 Tier 3 · Seasonal / sparse (4 cities)</h2>
+  <h2>🌤 Tier 3 · Seasonal (4 cities)</h2>
   <div id="tier3-list"></div>
 
   <div class="data-source">
     <b>Data sources:</b><br>
-    • 2025-2026 Winter-Spring schedule (Wuhu Government, Oct 2025)<br>
-    • 2025 Summer-Autumn schedule (Mar 2025)<br>
-    • FlightConnections direct-route data (updated 2026-06-03)<br>
+    • 2025-2026 Winter-Spring schedule (Wuhu government · 2025-10)<br>
+    • 2025 Summer-Autumn schedule (2025-03)<br>
+    • FlightConnections direct flight data (updated 2026-06-03)<br>
     <br>
-    <b>Note:</b> Routes adjust seasonally. <b>Always check official sources</b> (whxc-airport.com / FlightConnections / Trip.com) before booking.
+    <b>Note:</b> Routes vary by season. <b>Check official schedule before booking.</b>
   </div>
 </div>
 
@@ -164,15 +180,15 @@
   <div class="legend-title">Legend</div>
   <div class="legend-item"><div class="legend-marker hub"></div>Hub airport</div>
   <div class="legend-item"><div class="legend-marker"></div>Destination airport</div>
-  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>Tier 1 (daily)</div>
-  <div class="legend-item"><div class="legend-line" style="background:#5a8ece"></div>Tier 2 (3-7/wk)</div>
-  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#a0aec0 0,#a0aec0 4px,transparent 4px,transparent 8px)"></div>Tier 3 (seasonal)</div>
+  <div class="legend-item"><div class="legend-line" style="background:#c0392b"></div>Tier 1 · Main (daily)</div>
+  <div class="legend-item"><div class="legend-line" style="background:#e67e22"></div>Tier 2 · Secondary (3-7 weekly)</div>
+  <div class="legend-item"><div class="legend-line dashed" style="color:#16a085"></div>Tier 3 · Seasonal</div>
 </div>
 
 <div class="scale-tip">
-  Hover route → flight details<br>
-  Click route → full popup<br>
-  Click sidebar city → fly there<br>
+  Hover over route → tooltip<br>
+  Click route → popup<br>
+  Click sidebar city → fly to<br>
   Scroll / <kbd>+</kbd> <kbd>−</kbd> to zoom
 </div>
 
@@ -180,78 +196,124 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script>
+// Hub airport — Wuhu Xuanzhou (WHA / WUH_XY)
+// Coordinates: same as Ivan project (31.104, 118.667)
 const HUB = {
   code: "WHU_XY",
   iata: "WHA",
-  name: "Wuhu Xuanzhou Airport",
+  name: "Wuhu Xuanzhou Airport (WHA)",
   city: "Wanzhi District, Wuhu",
   lat: 31.104, lon: 118.667,
   opened: "2021-04-30",
-  grade: "4C regional"
+  grade: "4C Regional civil"
 };
 
+// Direct routes list
+// tier 1 = daily / main routes
+// tier 2 = 3-7 weekly / secondary or seasonal density
+// tier 3 = seasonal / sparse
 const ROUTES = [
-  // === Tier 1: Daily or near-daily ===
-  { tier: 1, code: "PEK",  city: "Beijing (Capital)",  airport: "Capital Intl",      lat: 40.080, lon: 116.585, airline: "HU Hainan Airlines",        freq: "Week 246 + summer extra", duration: "2h 10m", source: "Winter 25-26" },
-  { tier: 1, code: "CAN",  city: "Guangzhou",         airport: "Baiyun Intl",       lat: 23.392, lon: 113.299, airline: "CZ China Southern",         freq: "Daily",                    duration: "2h 20m", source: "FC 2026-06" },
-  { tier: 1, code: "SZX",  city: "Shenzhen",          airport: "Bao'an Intl",       lat: 22.639, lon: 113.811, airline: "ZH Shenzhen Airlines",     freq: "Daily / seasonal 6-10",    duration: "2h 20m", source: "Summer-Autumn 25" },
-  { tier: 1, code: "TFU",  city: "Chengdu (Tianfu)",  airport: "Tianfu Intl",       lat: 30.312, lon: 104.441, airline: "3U Sichuan Airlines",      freq: "Daily",                    duration: "2h 30m", source: "Ivan actual 10/4" },
-  { tier: 1, code: "CKG",  city: "Chongqing",         airport: "Jiangbei Intl",     lat: 29.719, lon: 106.642, airline: "3U + CZ",                  freq: "Daily + W1357",             duration: "2h 20m", source: "Winter 25-26" },
-  { tier: 1, code: "XIY",  city: "Xi'an",             airport: "Xianyang Intl",     lat: 34.447, lon: 108.751, airline: "—",                        freq: "Daily",                    duration: "2h",     source: "Summer-Autumn 25" },
-  { tier: 1, code: "KMG",  city: "Kunming",           airport: "Changshui Intl",    lat: 25.108, lon: 102.929, airline: "—",                        freq: "Daily",                    duration: "3h",     source: "Summer-Autumn 25" },
-  { tier: 1, code: "HAK",  city: "Haikou",            airport: "Meilan Intl",       lat: 19.935, lon: 110.459, airline: "GT Guilin Airlines",       freq: "Seasonal",                 duration: "2h 50m", source: "FC 2026-06 · longest" },
-  { tier: 1, code: "ZUH",  city: "Zhuhai",            airport: "Jinwan Intl",       lat: 22.006, lon: 113.371, airline: "GJ Loong Air",             freq: "Daily",                    duration: "2h 15m", source: "Winter 25-26" },
-  { tier: 1, code: "HRB",  city: "Harbin",            airport: "Taiping Intl",      lat: 45.623, lon: 126.250, airline: "GJ Loong Air",             freq: "Daily",                    duration: "3h",     source: "Winter 25-26" },
+  // === Tier 1:daily / near-daily ===
+  { tier: 1, code: "PEK",  city: "Beijing (PEK)",    airport: "PEK",     lat: 40.080, lon: 116.585, airline: "HU Hainan",            freq: "Mon Wed Fri, summer density", duration: "2h 10m", source: "Winter-Spring 25-26" },
+  { tier: 1, code: "CAN",  city: "Guangzhou",          airport: "Baiyun (CAN)",     lat: 23.392, lon: 113.299, airline: "CZ China Southern",                freq: "daily",                 duration: "2h 20m", source: "FC 2026-06" },
+  { tier: 1, code: "SZX",  city: "Shenzhen",          airport: "Bao’an (SZX)",     lat: 22.639, lon: 113.811, airline: "ZH Shenzhen Airlines",            freq: "daily / seasonal Jun-Oct",duration: "2h 20m", source: "Summer-Autumn 25" },
+  { tier: 1, code: "TFU",  city: "Chengdu (TFU)",    airport: "TFU",     lat: 30.312, lon: 104.441, airline: "3U Sichuan Airlines",                freq: "daily",                 duration: "2h 30m", source: "Ivan flight 10/4" },
+  { tier: 1, code: "CKG",  city: "Chongqing",          airport: "Jiangbei (CKG)",     lat: 29.719, lon: 106.642, airline: "3U Sichuan + CZ Chongqing Airlines",freq: "daily + Mon Wed Fri Sat",         duration: "2h 20m", source: "Winter-Spring 25-26" },
+  { tier: 1, code: "XIY",  city: "Xi'an",          airport: "XIY",     lat: 34.447, lon: 108.751, airline: "—",                     freq: "daily",                 duration: "2h",      source: "Summer-Autumn 25" },
+  { tier: 1, code: "KMG",  city: "Kunming",          airport: "KMG",     lat: 25.108, lon: 102.929, airline: "—",                     freq: "daily",                 duration: "3h",      source: "Summer-Autumn 25" },
+  { tier: 1, code: "HAK",  city: "Haikou",          airport: "Meilan (HAK)",     lat: 19.935, lon: 110.459, airline: "GT Guilin Airlines",            freq: "seasonal",               duration: "2h 50m", source: "FC 2026-06 · longest route" },
+  { tier: 1, code: "ZUH",  city: "Zhuhai",          airport: "Jinwan (ZUH)",     lat: 22.006, lon: 113.371, airline: "GJ Loong Air",            freq: "daily",                 duration: "2h 15m", source: "Winter-Spring 25-26" },
+  { tier: 1, code: "HRB",  city: "Harbin",        airport: "Taiping (HRB)",     lat: 45.623, lon: 126.250, airline: "GJ Loong Air",            freq: "daily",                 duration: "3h",      source: "Winter-Spring 25-26" },
 
-  // === Tier 2: 3-7/week, sometimes via-stop ===
-  { tier: 2, code: "DLC",  city: "Dalian",            airport: "Zhoushuizi Intl",   lat: 38.965, lon: 121.539, airline: "GT Guilin Airlines",       freq: "W1357",                    duration: "2h 05m", source: "Winter 25-26 · via KWL" },
-  { tier: 2, code: "KWL",  city: "Guilin",            airport: "Liangjiang Intl",   lat: 25.218, lon: 110.039, airline: "GT Guilin Airlines",       freq: "W1357",                    duration: "2h 15m", source: "Winter 25-26 · via DLC" },
-  { tier: 2, code: "FUO",  city: "Foshan",            airport: "Shadi Airport",     lat: 23.083, lon: 113.070, airline: "KN China United",         freq: "Daily (via PKX)",          duration: "2h 20m", source: "Winter 25-26" },
-  { tier: 2, code: "TYN",  city: "Taiyuan",           airport: "Wusu Intl",         lat: 37.747, lon: 112.628, airline: "HU Hainan Airlines",       freq: "W246",                     duration: "2h 15m", source: "Winter 25-26 · via JJN" },
-  { tier: 2, code: "JJN",  city: "Quanzhou",          airport: "Jinjiang Intl",     lat: 24.797, lon: 118.674, airline: "HU Hainan Airlines",       freq: "W246",                     duration: "1h 35m", source: "Winter 25-26 · via TYN" },
-  { tier: 2, code: "HSN",  city: "Zhoushan",          airport: "Putuoshan Airport", lat: 29.930, lon: 122.363, airline: "G5 China Express",         freq: "W1357",                    duration: "1h 15m", source: "Winter 25-26" },
-  { tier: 2, code: "KWE",  city: "Guiyang",           airport: "Longdongbao Intl",  lat: 26.538, lon: 106.801, airline: "GT Guilin Airlines",       freq: "Seasonal 6-10",            duration: "2h 20m", source: "FC 2026-06" },
-  { tier: 2, code: "CSX",  city: "Changsha",          airport: "Huanghua Intl",     lat: 28.193, lon: 113.221, airline: "GT Guilin Airlines",       freq: "Seasonal 6-10",            duration: "1h 35m", source: "FC 2026-06" },
+  // === Tier 2: 3-7 weekly, some via-stops / seasonal ===
+  { tier: 2, code: "DLC",  city: "Dalian",          airport: "Zhoushuizi (DLC)",   lat: 38.965, lon: 121.539, airline: "GT Guilin Airlines",            freq: "Mon Wed Fri Sat",              duration: "2h 05m", source: "Winter-Spring 25-26 · via Guilin" },
+  { tier: 2, code: "KWL",  city: "Guilin",          airport: "Liangjiang (KWL)",     lat: 25.218, lon: 110.039, airline: "GT Guilin Airlines",            freq: "Mon Wed Fri Sat",              duration: "2h 15m", source: "Winter-Spring 25-26 · via Dalian" },
+  { tier: 2, code: "FUO",  city: "Foshan",          airport: "Shadi (FUO)",         lat: 23.083, lon: 113.070, airline: "KN United",              freq: "daily (via Daxing)",         duration: "2h 20m", source: "Winter-Spring 25-26" },
+  { tier: 2, code: "TYN",  city: "Taiyuan",          airport: "Wusu (TYN)",     lat: 37.747, lon: 112.628, airline: "HU Hainan",            freq: "weekly 246",               duration: "2h 15m", source: "Winter-Spring 25-26 · via Quanzhou" },
+  { tier: 2, code: "JJN",  city: "Quanzhou",          airport: "Jinjiang (JJN)",     lat: 24.797, lon: 118.674, airline: "HU Hainan",            freq: "weekly 246",               duration: "1h 35m", source: "Winter-Spring 25-26 · via Taiyuan" },
+  { tier: 2, code: "HSN",  city: "Zhoushan",          airport: "Putuoshan (HSN)",       lat: 29.930, lon: 122.363, airline: "G5 China Express",            freq: "Mon Wed Fri Sat",              duration: "1h 15m", source: "Winter-Spring 25-26" },
+  { tier: 2, code: "KWE",  city: "Guiyang",          airport: "Longdongbao (KWE)",   lat: 26.538, lon: 106.801, airline: "GT Guilin Airlines",            freq: "seasonal Jun-Oct",       duration: "2h 20m", source: "FC 2026-06" },
+  { tier: 2, code: "CSX",  city: "Changsha",          airport: "Huanghua (CSX)",     lat: 28.193, lon: 113.221, airline: "GT Guilin Airlines",            freq: "seasonal Jun-Oct",       duration: "1h 35m", source: "FC 2026-06" },
 
-  // === Tier 3: Seasonal / sparse ===
-  { tier: 3, code: "XMN",  city: "Xiamen",            airport: "Gaoqi Intl",        lat: 24.544, lon: 118.127, airline: "—",                        freq: "Historical",               duration: "1h 50m", source: "Summer-Autumn 25" },
-  { tier: 3, code: "SYX",  city: "Sanya",             airport: "Phoenix Intl",      lat: 18.303, lon: 109.412, airline: "—",                        freq: "Seasonal (winter)",        duration: "3h",     source: "Summer-Autumn 25" },
-  { tier: 3, code: "CTU",  city: "Chengdu (Shuangliu)",airport:"Shuangliu Intl",    lat: 30.578, lon: 103.947, airline: "—",                        freq: "Summer extra",             duration: "2h 30m", source: "Summer-Autumn 25 announcement" },
-  { tier: 3, code: "CGQ",  city: "Changchun",         airport: "Longjia Intl",      lat: 43.996, lon: 125.685, airline: "—",                        freq: "Historical",               duration: "2h 50m", source: "Summer-Autumn 25" }
+  // === Tier 3: sparse / summer seasonal ===
+  { tier: 3, code: "XMN",  city: "Xiamen",          airport: "Gaoqi (XMN)",     lat: 24.544, lon: 118.127, airline: "—",                     freq: "historical",             duration: "1h 50m", source: "2025 Summer-Autumn" },
+  { tier: 3, code: "SYX",  city: "Sanya",          airport: "Phoenix (SYX)",     lat: 18.303, lon: 109.412, airline: "—",                     freq: "seasonal (winter escape)",     duration: "3h",      source: "Summer-Autumn 25" },
+  { tier: 3, code: "CTU",  city: "Chengdu (CTU)",    airport: "Shuangliu (CTU)",     lat: 30.578, lon: 103.947, airline: "—",                     freq: "summer seasonal",             duration: "2h 30m", source: "Summer-Autumn 25 announcement" },
+  { tier: 3, code: "CGQ",  city: "Changchun",          airport: "Longjia (CGQ)",     lat: 43.996, lon: 125.685, airline: "—",                     freq: "historical",             duration: "2h 50m", source: "Summer-Autumn 25" }
 ];
 
 const TIER_INFO = {
-  1: { label: "Tier 1 · Mainline", color: "#2b6cb0", weight: 3.5, opacity: 0.85, dash: null, tag: "#2b6cb0" },
-  2: { label: "Tier 2 · Secondary", color: "#5a8ece", weight: 2.8, opacity: 0.75, dash: null, tag: "#5a8ece" },
-  3: { label: "Tier 3 · Seasonal", color: "#a0aec0", weight: 2,   opacity: 0.65, dash: "5, 7", tag: "#a0aec0" }
+  1: { label: "Tier 1 · Main",     color: "#c0392b", weight: 3.8, opacity: 0.90, dash: null,     tag: "#c0392b" },
+  2: { label: "Tier 2 · Secondary",   color: "#e67e22", weight: 3.0, opacity: 0.85, dash: null,     tag: "#d35400" },
+  3: { label: "Tier 3 · Seasonal",   color: "#16a085", weight: 2.4, opacity: 0.80, dash: "6, 8",  tag: "#16a085" }
 };
 
 const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, worldCopyJump: true });
 
-L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a> · Data: FlightConnections / Wuhu Government'
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · route data sources: FlightConnections / Wuhu Government'
 }).addTo(map);
 
+// compute fit bounds: covers hub + all destinations
 const allPoints = [[HUB.lat, HUB.lon]].concat(ROUTES.map(r => [r.lat, r.lon]));
 const bounds = L.latLngBounds(allPoints);
 map.fitBounds(bounds, { padding: [80, 80] });
 
+// === Selection state management ===
+let selected = null;
+
+function styleBaseline(r) {
+  const t = TIER_INFO[r.tier];
+  return { color: t.color, weight: t.weight, opacity: t.opacity, dashArray: t.dash };
+}
+function styleDim(r) {
+  const t = TIER_INFO[r.tier];
+  return { color: t.color, weight: t.weight, opacity: 0.10, dashArray: t.dash };
+}
+function styleFocus(r) {
+  const t = TIER_INFO[r.tier];
+  return { color: t.color, weight: t.weight * 2.4, opacity: 1.0, dashArray: null };
+}
+
+function selectRoute(r) {
+  selected = r;
+  ROUTES.forEach(x => {
+    if (x === r) x.polyline.setStyle(styleFocus(x));
+    else x.polyline.setStyle(styleDim(x));
+  });
+  document.querySelectorAll('.route-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.code === r.code);
+  });
+}
+
+function deselectAll() {
+  selected = null;
+  ROUTES.forEach(x => x.polyline.setStyle(styleBaseline(x)));
+  document.querySelectorAll('.route-card.selected').forEach(c => c.classList.remove('selected'));
+  map.closePopup();
+}
+
+// === Render radiating routes ===
+// Tip: each route draws two polylines
+//   1. Visible line (thin) — display
+//   2. Hit zone (transparent, thick) — easier hover/click
 ROUTES.forEach(r => {
   const tier = TIER_INFO[r.tier];
   const latlngs = [[HUB.lat, HUB.lon], [r.lat, r.lon]];
 
-  // Visible line
-  const polyline = L.polyline(latlngs, {
+  // Visible line — store polyline ref on r for later setStyle
+  r.polyline = L.polyline(latlngs, {
     color: tier.color, weight: tier.weight, opacity: tier.opacity, dashArray: tier.dash
   }).addTo(map);
 
-  // Invisible hit zone for easier hover/click
-  const hit = L.polyline(latlngs, {
+  // Transparent hit zone (thicker + transparent, easier to hit)
+  r.hit = L.polyline(latlngs, {
     color: 'transparent', weight: 14, opacity: 0, interactive: true, pointerEvents: 'stroke'
   }).addTo(map);
 
-  hit.bindTooltip(
+  // Hover tooltip — bound to hit zone
+  r.hit.bindTooltip(
     `<div style="font-family:inherit">
       <b style="font-size:13px">${HUB.iata} → ${r.code} · ${r.city}</b><br>
       <span style="font-size:11px;color:#4a5568">${r.airline}</span><br>
@@ -261,15 +323,31 @@ ROUTES.forEach(r => {
     { sticky: true, direction: 'auto', opacity: 0.95, className: 'route-tooltip' }
   );
 
-  // Hover highlight: synchronize visible line
-  hit.on('mouseover', () => {
-    polyline.setStyle({ weight: tier.weight + 3, opacity: 1 });
+  // hover highlight: sync visible line style (only when not focused on this route)
+  r.hit.on('mouseover', () => {
+    if (selected === r) return; // already focused, skip
+    r.polyline.setStyle({ weight: tier.weight + 2, opacity: 1 });
   });
-  hit.on('mouseout', () => {
-    polyline.setStyle({ weight: tier.weight, opacity: tier.opacity });
+  r.hit.on('mouseout', () => {
+    if (selected === r) return;
+    if (selected) {
+      // other routes already dimmed
+      if (selected !== r) r.polyline.setStyle(styleDim(r));
+    } else {
+      r.polyline.setStyle(styleBaseline(r));
+    }
   });
 
-  hit.bindPopup(
+  // Click — focus this route + open popup
+  r.hit.on('click', (e) => {
+    L.DomEvent.stopPropagation(e); // prevent bubbling to map.click which would deselect
+    selectRoute(r);
+    r.hit.openPopup();
+  });
+
+  // bind popup to r.hit (forward reference, fillPolyline resolves later)
+  // Click popup — bound to hit zone
+  r.hit.bindPopup(
     `<div class="popup-content">
       <div class="city">${HUB.iata} → ${r.code}</div>
       <div class="city" style="font-size:13px;color:#4a5568">${r.city} · ${r.airport}</div>
@@ -278,12 +356,14 @@ ROUTES.forEach(r => {
         <span class="tier-tag" style="background:${tier.tag}">${tier.label}</span>
       </div>
       <hr>
-      <div class="meta"><b>Airline:</b> ${r.airline}</div>
-      <div class="meta"><b>Duration:</b> ${r.duration}</div>
-      <div class="meta"><b>Frequency:</b> ${r.freq}</div>
-      <div class="meta">${r.code === "ZUH" || r.code === "HRB" ? "⚠️ Same flight continues on to a third city" :
+      <div class="meta-row">
+        <div><div class="lbl">Airline</div>${r.airline}</div>
+        <div><div class="lbl">Duration</div>${r.duration}</div>
+      </div>
+      <div class="meta"><b>Frequency:</b>${r.freq}</div>
+      <div class="meta">${r.code === "ZUH" || r.code === "HRB" ? "⚠️ Same flight continues on" :
                           r.code === "DLC" || r.code === "KWL" ? "⚠️ Same flight stops at the other city" :
-                          r.code === "TYN" || r.code === "JJN" ? "⚠️ Same flight continues on to a third city" :
+                          r.code === "TYN" || r.code === "JJN" ? "⚠️ Same flight continues on" :
                           r.code === "HAK" ? "🛬 Longest single-sector route (1,487 km)" :
                           r.code === "SZX" || r.code === "KWE" || r.code === "CSX" ? "🌞 Seasonal route (Jun-Oct)" : ""}</div>
       <div class="source">${r.source}</div>
@@ -292,6 +372,12 @@ ROUTES.forEach(r => {
   );
 });
 
+// click on empty area (besides hub and routes) deselects
+map.on('click', (e) => {
+  deselectAll();
+});
+
+// === Render destination markers (small, with tier color) ===
 ROUTES.forEach(r => {
   const tier = TIER_INFO[r.tier];
   const icon = L.divIcon({
@@ -307,31 +393,36 @@ ROUTES.forEach(r => {
     .addTo(map);
 });
 
+// === Render hub airport (large, with pulse) ===
 const hubIcon = L.divIcon({
   html: `<div class="hub-marker">✈</div>`,
   iconSize: [36, 36], iconAnchor: [18, 18], className: ''
 });
-L.marker([HUB.lat, HUB.lon], { icon: hubIcon, title: HUB.name, zIndexOffset: 1000 }).addTo(map)
-  .bindPopup(
+const hubMarker = L.marker([HUB.lat, HUB.lon], { icon: hubIcon, title: HUB.name, zIndexOffset: 1000 }).addTo(map);
+// clicking hub does NOT deselect route
+hubMarker.on('click', (e) => { L.DomEvent.stopPropagation(e); });
+hubMarker.bindPopup(
     `<div class="popup-content">
       <div class="city">✈ ${HUB.name}</div>
-      <div class="meta">${HUB.city} · Opened ${HUB.opened}</div>
+      <div class="meta">${HUB.city} · ${HUB.opened} commissioned</div>
       <div class="meta">${HUB.grade}</div>
       <hr>
-      <div class="meta"><b>Hub code:</b> ${HUB.iata} · <b>Direct destinations:</b> ${ROUTES.length}</div>
-      <div class="meta"><b>Tier 1:</b> ${ROUTES.filter(r => r.tier === 1).length} cities · daily or near-daily</div>
-      <div class="meta"><b>Tier 2:</b> ${ROUTES.filter(r => r.tier === 2).length} cities · 3-7/week</div>
-      <div class="meta"><b>Tier 3:</b> ${ROUTES.filter(r => r.tier === 3).length} cities · seasonal</div>
-      <div class="source">Wanzhi is ~25-30 km from the airport · ~25 min drive</div>
+      <div class="meta"><b>Departures:</b>${HUB.iata} · <b>Destination count:</b>${ROUTES.length} (all confirmed)</div>
+      <div class="meta"><b>Tier 1:</b>${ROUTES.filter(r => r.tier === 1).length} cities · daily / near-daily</div>
+      <div class="meta"><b>Tier 2:</b>${ROUTES.filter(r => r.tier === 2).length} cities · 3-7 weekly</div>
+      <div class="meta"><b>Tier 3:</b>${ROUTES.filter(r => r.tier === 3).length} cities · seasonal</div>
+      <div class="source">About 25-30 km from Wanzhi · 25 min by car</div>
     </div>`,
     { maxWidth: 320, autoPan: true }
   );
 
+// === Render left sidebar list (grouped by tier) ===
 function buildTierList(tier, containerId) {
   const container = document.getElementById(containerId);
   ROUTES.filter(r => r.tier === tier).forEach(r => {
     const card = document.createElement('div');
     card.className = 'route-card';
+    card.dataset.code = r.code;
     card.style.borderLeftColor = TIER_INFO[r.tier].color;
     card.innerHTML = `
       <div class="city">${r.city} <span style="font-family:monospace;color:#718096;font-size:11px">${r.code}</span></div>
@@ -339,7 +430,12 @@ function buildTierList(tier, containerId) {
       <div class="note">${r.freq}</div>
     `;
     card.addEventListener('click', () => {
+      // 1. Focus this route (highlight + dim others + popup)
+      selectRoute(r);
+      // 2. Fly to destination
       map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+      // 3. After fly completes, open popup
+      setTimeout(() => { r.hit.openPopup(); }, 700);
     });
     container.appendChild(card);
   });

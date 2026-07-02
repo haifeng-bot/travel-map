@@ -33,12 +33,17 @@
     cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
   }
   .route-card:hover { transform: translateX(2px); box-shadow: 0 2px 6px rgba(0,0,0,0.10); background: #f7faff; }
+  .route-card.selected { box-shadow: 0 3px 10px rgba(0,0,0,0.20); border-left-width: 6px; }
+  .route-card.selected::after {
+    content: '●'; position: absolute; right: 6px; top: 6px;
+    font-size: 11px; color: #c0392b;
+  }
   .route-card .city { font-weight: 600; font-size: 13px; }
   .route-card .meta { font-size: 10px; color: #4a5568; margin-top: 2px; font-family: monospace; }
   .route-card .note { font-size: 10px; color: #718096; margin-top: 2px; font-style: italic; }
 
   .hub-badge {
-    display: inline-block; background: #2b6cb0; color: #fff;
+    display: inline-block; background: #c0392b; color: #fff;
     padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700;
     margin-right: 6px; font-family: monospace; letter-spacing: 0.3px;
   }
@@ -52,12 +57,13 @@
   .legend .legend-title { font-weight: 700; font-size: 11px; margin-bottom: 6px; color: #4a5568; letter-spacing: 0.3px; }
   .legend-item { display: flex; align-items: center; margin: 4px 0; }
   .legend-line { width: 36px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-line.dashed { background-image: linear-gradient(to right, currentColor 50%, transparent 50%); background-size: 5px 3px; background-repeat: repeat-x; }
   .legend-marker {
-    width: 12px; height: 12px; border-radius: 50%; border: 2px dashed #2b6cb0;
+    width: 12px; height: 12px; border-radius: 50%; border: 2px dashed #16a085;
     margin-right: 8px; flex-shrink: 0;
   }
   .legend-marker.hub {
-    background: #2b6cb0; border: 2px solid #2b6cb0;
+    background: #c0392b; border: 2px solid #c0392b;
     width: 14px; height: 14px;
   }
   .legend-tag {
@@ -79,16 +85,16 @@
   }
 
   .hub-marker {
-    background: #2b6cb0; border-radius: 50%;
+    background: #c0392b; border-radius: 50%;
     width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 18px; font-weight: 700;
-    box-shadow: 0 3px 8px rgba(43, 108, 176, 0.45);
+    box-shadow: 0 3px 8px rgba(192, 57, 43, 0.5);
     border: 3px solid #fff;
   }
   .hub-marker::after {
     content: ''; position: absolute; inset: -8px;
-    border: 2px solid rgba(43, 108, 176, 0.35);
+    border: 2px solid rgba(192, 57, 43, 0.35);
     border-radius: 50%; animation: pulse 2.5s ease-out infinite;
   }
   @keyframes pulse {
@@ -97,19 +103,19 @@
   }
 
   .dest-marker {
-    background: #fff; border: 2px dashed #2b6cb0;
+    background: #fff; border: 2px dashed #c0392b;
     width: 12px; height: 12px; border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
-  .dest-marker.tier1 { border-color: #2b6cb0; border-style: solid; width: 14px; height: 14px; background: #ebf8ff; }
-  .dest-marker.tier2 { border-color: #5a8ece; }
-  .dest-marker.tier3 { border-color: #a0aec0; }
+  .dest-marker.tier1 { border-color: #c0392b; border-style: solid; width: 14px; height: 14px; background: #fdecea; }
+  .dest-marker.tier2 { border-color: #e67e22; border-style: solid; }
+  .dest-marker.tier3 { border-color: #16a085; }
 
   .popup-content { font-family: inherit; min-width: 240px; }
   .popup-content .city { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
   .popup-content .airport-tag {
     display: inline-block; padding: 2px 6px; border-radius: 3px;
-    background: #2b6cb0; color: #fff; font-size: 10px; font-weight: 700;
+    background: #c0392b; color: #fff; font-size: 10px; font-weight: 700;
     margin-right: 4px; font-family: monospace;
   }
   .popup-content .tier-tag {
@@ -174,9 +180,9 @@
   <div class="legend-title">图例</div>
   <div class="legend-item"><div class="legend-marker hub"></div>枢纽机场</div>
   <div class="legend-item"><div class="legend-marker"></div>目的地机场</div>
-  <div class="legend-item"><div class="legend-line" style="background:#2b6cb0"></div>第一梯队 (每日)</div>
-  <div class="legend-item"><div class="legend-line" style="background:#5a8ece"></div>第二梯队 (周 3-7)</div>
-  <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#a0aec0 0,#a0aec0 4px,transparent 4px,transparent 8px)"></div>第三梯队 (季节性)</div>
+  <div class="legend-item"><div class="legend-line" style="background:#c0392b"></div>Tier 1 · 主力 (每日)</div>
+  <div class="legend-item"><div class="legend-line" style="background:#e67e22"></div>Tier 2 · 次主力 (周 3-7)</div>
+  <div class="legend-item"><div class="legend-line dashed" style="color:#16a085"></div>Tier 3 · 季节性</div>
 </div>
 
 <div class="scale-tip">
@@ -237,9 +243,9 @@ const ROUTES = [
 ];
 
 const TIER_INFO = {
-  1: { label: "Tier 1 · 主力", color: "#2b6cb0", weight: 3.5, opacity: 0.85, dash: null, tag: "#2b6cb0" },
-  2: { label: "Tier 2 · 次主力", color: "#5a8ece", weight: 2.8, opacity: 0.75, dash: null, tag: "#5a8ece" },
-  3: { label: "Tier 3 · 季节性", color: "#a0aec0", weight: 2,   opacity: 0.65, dash: "5, 7", tag: "#a0aec0" }
+  1: { label: "Tier 1 · 主力",     color: "#c0392b", weight: 3.8, opacity: 0.90, dash: null,     tag: "#c0392b" },
+  2: { label: "Tier 2 · 次主力",   color: "#e67e22", weight: 3.0, opacity: 0.85, dash: null,     tag: "#d35400" },
+  3: { label: "Tier 3 · 季节性",   color: "#16a085", weight: 2.4, opacity: 0.80, dash: "6, 8",  tag: "#16a085" }
 };
 
 const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, worldCopyJump: true });
@@ -254,6 +260,40 @@ const allPoints = [[HUB.lat, HUB.lon]].concat(ROUTES.map(r => [r.lat, r.lon]));
 const bounds = L.latLngBounds(allPoints);
 map.fitBounds(bounds, { padding: [80, 80] });
 
+// === 选择状态管理 ===
+let selected = null;
+
+function styleBaseline(r) {
+  const t = TIER_INFO[r.tier];
+  return { color: t.color, weight: t.weight, opacity: t.opacity, dashArray: t.dash };
+}
+function styleDim(r) {
+  const t = TIER_INFO[r.tier];
+  return { color: t.color, weight: t.weight, opacity: 0.10, dashArray: t.dash };
+}
+function styleFocus(r) {
+  const t = TIER_INFO[r.tier];
+  return { color: t.color, weight: t.weight * 2.4, opacity: 1.0, dashArray: null };
+}
+
+function selectRoute(r) {
+  selected = r;
+  ROUTES.forEach(x => {
+    if (x === r) x.polyline.setStyle(styleFocus(x));
+    else x.polyline.setStyle(styleDim(x));
+  });
+  document.querySelectorAll('.route-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.code === r.code);
+  });
+}
+
+function deselectAll() {
+  selected = null;
+  ROUTES.forEach(x => x.polyline.setStyle(styleBaseline(x)));
+  document.querySelectorAll('.route-card.selected').forEach(c => c.classList.remove('selected'));
+  map.closePopup();
+}
+
 // === 渲染辐射航线 ===
 // 技巧: 每条航线画两条 polyline
 //   1. 可见线 (细) — 视觉显示
@@ -262,18 +302,18 @@ ROUTES.forEach(r => {
   const tier = TIER_INFO[r.tier];
   const latlngs = [[HUB.lat, HUB.lon], [r.lat, r.lon]];
 
-  // 可见线
-  const polyline = L.polyline(latlngs, {
+  // 可见线 — 将 polyline 引用挂在 r 上，以便后续 setStyle
+  r.polyline = L.polyline(latlngs, {
     color: tier.color, weight: tier.weight, opacity: tier.opacity, dashArray: tier.dash
   }).addTo(map);
 
   // 透明 hit zone (更粗 + 透明，便于 hover/click 命中)
-  const hit = L.polyline(latlngs, {
+  r.hit = L.polyline(latlngs, {
     color: 'transparent', weight: 14, opacity: 0, interactive: true, pointerEvents: 'stroke'
   }).addTo(map);
 
   // Hover 弹出轻量 tooltip — 绑在 hit zone 上
-  hit.bindTooltip(
+  r.hit.bindTooltip(
     `<div style="font-family:inherit">
       <b style="font-size:13px">${HUB.iata} → ${r.code} · ${r.city}</b><br>
       <span style="font-size:11px;color:#4a5568">${r.airline}</span><br>
@@ -283,16 +323,31 @@ ROUTES.forEach(r => {
     { sticky: true, direction: 'auto', opacity: 0.95, className: 'route-tooltip' }
   );
 
-  // hover 高亮：同步可见线的样式变化
-  hit.on('mouseover', () => {
-    polyline.setStyle({ weight: tier.weight + 3, opacity: 1 });
+  // hover 高亮：同步可见线的样式变化（只在未聚焦本航线时起作用）
+  r.hit.on('mouseover', () => {
+    if (selected === r) return; // 已聚焦，不重复
+    r.polyline.setStyle({ weight: tier.weight + 2, opacity: 1 });
   });
-  hit.on('mouseout', () => {
-    polyline.setStyle({ weight: tier.weight, opacity: tier.opacity });
+  r.hit.on('mouseout', () => {
+    if (selected === r) return;
+    if (selected) {
+      // 其他航线已被变暗
+      if (selected !== r) r.polyline.setStyle(styleDim(r));
+    } else {
+      r.polyline.setStyle(styleBaseline(r));
+    }
   });
 
-  // Click 完整 popup — 绑在 hit zone 上
-  hit.bindPopup(
+  // Click — 聚焦本航线 + 开 popup
+  r.hit.on('click', (e) => {
+    L.DomEvent.stopPropagation(e); // 阻止冒泡到 map.click 触发取消选中
+    selectRoute(r);
+    r.hit.openPopup();
+  });
+
+  // 给 r.hit 绑 popup (离 r.hit 控件创建后，便于 fillPolyline 同步)
+  // Click popup — 绑在 hit zone 上
+  r.hit.bindPopup(
     `<div class="popup-content">
       <div class="city">${HUB.iata} → ${r.code}</div>
       <div class="city" style="font-size:13px;color:#4a5568">${r.city} · ${r.airport}</div>
@@ -317,6 +372,11 @@ ROUTES.forEach(r => {
   );
 });
 
+// 点击空白处（除 hub 与航线外）取消选中
+map.on('click', (e) => {
+  deselectAll();
+});
+
 // === 渲染目的城市标记（小型带 tier 颜色） ===
 ROUTES.forEach(r => {
   const tier = TIER_INFO[r.tier];
@@ -338,8 +398,10 @@ const hubIcon = L.divIcon({
   html: `<div class="hub-marker">✈</div>`,
   iconSize: [36, 36], iconAnchor: [18, 18], className: ''
 });
-L.marker([HUB.lat, HUB.lon], { icon: hubIcon, title: HUB.name, zIndexOffset: 1000 }).addTo(map)
-  .bindPopup(
+const hubMarker = L.marker([HUB.lat, HUB.lon], { icon: hubIcon, title: HUB.name, zIndexOffset: 1000 }).addTo(map);
+// 点击枢纽 不 取消选中航线
+hubMarker.on('click', (e) => { L.DomEvent.stopPropagation(e); });
+hubMarker.bindPopup(
     `<div class="popup-content">
       <div class="city">✈ ${HUB.name}</div>
       <div class="meta">${HUB.city} · ${HUB.opened} 通航</div>
@@ -360,6 +422,7 @@ function buildTierList(tier, containerId) {
   ROUTES.filter(r => r.tier === tier).forEach(r => {
     const card = document.createElement('div');
     card.className = 'route-card';
+    card.dataset.code = r.code;
     card.style.borderLeftColor = TIER_INFO[r.tier].color;
     card.innerHTML = `
       <div class="city">${r.city} <span style="font-family:monospace;color:#718096;font-size:11px">${r.code}</span></div>
@@ -367,13 +430,12 @@ function buildTierList(tier, containerId) {
       <div class="note">${r.freq}</div>
     `;
     card.addEventListener('click', () => {
-      // fly to destination
+      // 1. 聚焦本航线（高亮 + 其他变暗 + popup）
+      selectRoute(r);
+      // 2. 飞到目的地
       map.flyTo([r.lat, r.lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
-      // open popup after fly
-      setTimeout(() => {
-        // find the polyline marker (the city marker above) and open its tooltip
-        // Simpler: just pan there and visually highlight
-      }, 600);
+      // 3. fly 完成后开 popup
+      setTimeout(() => { r.hit.openPopup(); }, 700);
     });
     container.appendChild(card);
   });
